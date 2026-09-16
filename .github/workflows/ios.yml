@@ -1,0 +1,91 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT: MyApp.xcodeproj
+  SCHEME: MyApp
+  APP_NAME: MyApp
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain info
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install --quiet xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      # Швидка перевірка, що код компілюється. Падає раніше й із зрозумілішою
+      # помилкою, ніж archive, тому йде першим.
+      - name: Build for simulator
+        run: |
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Archive for device (unsigned)
+        run: |
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/$APP_NAME.xcarchive" \
+            -quiet \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+
+      # xcodebuild -exportArchive вимагає підпису, тому .ipa пакуємо вручну:
+      # .ipa — це просто zip із теками Payload/<Name>.app усередині.
+      - name: Package unsigned .ipa
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/Payload"
+          cp -R "$RUNNER_TEMP/$APP_NAME.xcarchive/Products/Applications/$APP_NAME.app" \
+                "$RUNNER_TEMP/out/Payload/"
+          cd "$RUNNER_TEMP/out"
+          zip -qry "$APP_NAME-unsigned.ipa" Payload
+          ls -lh "$APP_NAME-unsigned.ipa"
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-unsigned-ipa
+          path: ${{ runner.temp }}/out/*.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach .ipa to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/out/*.ipa

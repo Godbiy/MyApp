@@ -1,0 +1,15 @@
+# Генерується XcodeGen'ом — у git не тримаємо
+*.xcodeproj/
+*.xcworkspace/
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcarchive
+*.ipa
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
