@@ -16,6 +16,9 @@ env:
   SCHEME: MyApp
   APP_NAME: MyApp
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -84,7 +87,22 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach .ipa to release
+      # Рухомий реліз: постійне посилання на найсвіжішу збірку з main,
+      # щоб .ipa можна було качати з github.com/Godbiy/MyApp/releases/latest
+      # і не лазити щоразу у вкладку Actions.
+      - name: Update "latest" release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Остання збірка з main
+          body: |
+            Непідписаний `.ipa`, зібраний з коміту ${{ github.sha }} (build ${{ github.run_number }}).
+            Як поставити на айфон — див. [docs/GUIDE.md](https://github.com/Godbiy/MyApp/blob/main/docs/GUIDE.md#3-як-поставити-на-айфон).
+          prerelease: true
+          files: ${{ runner.temp }}/out/*.ipa
+
+      - name: Attach .ipa to tagged release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:

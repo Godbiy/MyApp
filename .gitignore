@@ -10,6 +10,9 @@ xcuserdata/
 *.xcarchive
 *.ipa
 
+# ...окрім знімка збірки, який тримаємо в репо навмисно
+!dist/*.ipa
+
 # macOS / Windows
 .DS_Store
 Thumbs.db
