@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Literata:opsz,wght@7..72,400&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #5b3fd6; }
+    a:hover { color: #3f2ba3; }
+    .noscroll::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #f4f1fa; color: #14121c;">
+
+  <div style="position: absolute; inset: 0; background: radial-gradient(110% 72% at 10% -8%, rgba(124,92,255,0.42), transparent 62%), radial-gradient(100% 62% at 96% 10%, rgba(32,208,192,0.38), transparent 58%), radial-gradient(95% 58% at 76% 100%, rgba(255,77,141,0.34), transparent 62%), radial-gradient(85% 50% at 2% 86%, rgba(255,176,32,0.34), transparent 62%);"></div>
+
+  <div style="position: absolute; inset: 0; display: flex; flex-direction: column;">
+
+    <div style="height: 56px; flex-shrink: 0;"></div>
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 2px 20px 0; flex-shrink: 0;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(20,18,28,0.45);">Вівторок, 16 вересня</div>
+        <div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; color: #14121c;">Нотатки</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(255,255,255,0.5)); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.9); box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 8px 24px rgba(40,28,80,0.14); cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(20,18,28,0.75)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="1.4"></circle><circle cx="19" cy="12" r="1.4"></circle><circle cx="5" cy="12" r="1.4"></circle></svg>
+      </div>
+    </div>
+
+    <div style="padding: 16px 20px 0; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; border-radius: 23px; background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.44)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.85); box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 6px 20px rgba(40,28,80,0.1); cursor: pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(20,18,28,0.42)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <div style="font-size: 15.5px; color: rgba(20,18,28,0.42); font-weight: 500;">Пошук у 5 нотатках</div>
+      </div>
+    </div>
+
+    <div class="noscroll" style="display: flex; gap: 8px; padding: 14px 20px 0; overflow-x: auto; flex-shrink: 0;">
+      <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="5">
+        <div style="{{ chip.style }}" onClick="{{ chip.pick }}">{{ chip.label }}</div>
+      </sc-for>
+    </div>
+
+    <div class="noscroll" style="flex: 1; overflow-y: auto; padding: 16px 20px 128px; display: flex; flex-direction: column; gap: 11px;">
+      <sc-for list="{{ visible }}" as="item" hint-placeholder-count="5">
+        <div style="{{ item.cardStyle }}">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <sc-if value="{{ item.pinned }}" hint-placeholder-val="{{ false }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#7C5CFF" stroke="none"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"></path></svg>
+            </sc-if>
+            <div style="flex: 1; font-size: 16.5px; font-weight: 700; letter-spacing: -0.012em; color: #14121c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.title }}</div>
+            <div style="font-size: 12px; font-weight: 700; color: rgba(20,18,28,0.4); white-space: nowrap;">{{ item.time }}</div>
+          </div>
+          <div style="font-family: 'Literata', Georgia, serif; font-size: 13.5px; line-height: 1.5; color: rgba(20,18,28,0.6); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.preview }}</div>
+          <div style="display: flex; align-items: center; gap: 7px; padding-top: 2px;">
+            <div style="width: 6px; height: 6px; border-radius: 3px; background: {{ item.dot }};"></div>
+            <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; color: rgba(20,18,28,0.48);">{{ item.folder }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="position: absolute; left: 20px; right: 20px; bottom: 30px; display: flex; align-items: center; gap: 10px;">
+      <div style="flex: 1; display: flex; align-items: center; justify-content: space-around; height: 62px; padding: 0 8px; border-radius: 31px; background: linear-gradient(150deg, rgba(255,255,255,0.82), rgba(255,255,255,0.5)); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.9); box-shadow: inset 0 1.5px 0 rgba(255,255,255,1), 0 16px 40px rgba(40,28,80,0.16);">
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; border-radius: 23px; background: rgba(20,18,28,0.07);">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#14121c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; cursor: pointer;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="rgba(20,18,28,0.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; cursor: pointer;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="rgba(20,18,28,0.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 31px; background: linear-gradient(150deg, #8b6dff, #6742e6); border: 1px solid rgba(255,255,255,0.55); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.6), 0 16px 40px rgba(70,40,190,0.36); cursor: pointer;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { folder: 'Усі' };
+  }
+
+  chipStyle(active) {
+    const base = 'display:flex; align-items:center; height:38px; padding:0 17px; border-radius:19px; font-size:14px; font-weight:700; letter-spacing:-0.01em; white-space:nowrap; cursor:pointer; backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);';
+    return base + (active
+      ? ' background:linear-gradient(145deg, rgba(30,22,60,0.92), rgba(30,22,60,0.78)); border:1px solid rgba(255,255,255,0.3); color:#fff; box-shadow:0 8px 22px rgba(40,28,80,0.28);'
+      : ' background:linear-gradient(145deg, rgba(255,255,255,0.74), rgba(255,255,255,0.42)); border:1px solid rgba(255,255,255,0.85); color:rgba(20,18,28,0.66); box-shadow:inset 0 1px 0 rgba(255,255,255,1), 0 6px 18px rgba(40,28,80,0.08);');
+  }
+
+  renderVals() {
+    const st = this.state;
+    const all = [
+      { id: 'n1', title: 'Ідеї для застосунку', time: '14:32', folder: 'Ідеї', dot: '#7C5CFF', pinned: true, preview: 'Записник із Liquid Glass. Швидкий запис з екрана блокування, теги замість тек, пошук по рукописному тексту.' },
+      { id: 'n2', title: 'Нотатки з зустрічі', time: '11:05', folder: 'Робота', dot: '#20D0C0', pinned: false, preview: 'Домовились: макети до пʼятниці, бекенд бере на себе Данило, реліз орієнтовно 3 жовтня.' },
+      { id: 'n3', title: 'Список покупок', time: '19:48', folder: 'Побут', dot: '#FFB020', pinned: false, preview: 'Оливкова олія · кава · хліб · помідори · сир · вівсянка · мед' },
+      { id: 'n4', title: 'Книжки на осінь', time: '08:20', folder: 'Особисте', dot: '#FF4D8D', pinned: false, preview: 'Стус — Палімпсести. Андрухович — Московіада.' },
+      { id: 'n5', title: 'Рецепт борщу', time: '20:15', folder: 'Побут', dot: '#FFB020', pinned: false, preview: 'Буряк натерти й гасити окремо з томатом і краплею оцту — тоді колір не втратиться.' },
+    ];
+
+    const cardStyle = (pinned) => {
+      const base = 'display:flex; flex-direction:column; gap:6px; padding:15px 16px 14px; border-radius:23px; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 rgba(255,255,255,1), 0 12px 30px rgba(40,28,80,0.12);';
+      return base + (pinned
+        ? ' background:linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); border:1px solid rgba(124,92,255,0.45);'
+        : ' background:linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.46)); border:1px solid rgba(255,255,255,0.88);');
+    };
+
+    const chips = ['Усі', 'Ідеї', 'Робота', 'Побут', 'Особисте'].map((f) => ({
+      label: f,
+      style: this.chipStyle(f === st.folder),
+      pick: () => this.setState({ folder: f }),
+    }));
+
+    const visible = all
+      .filter((n) => st.folder === 'Усі' || n.folder === st.folder)
+      .map((n) => ({ ...n, cardStyle: cardStyle(n.pinned) }));
+
+    return { chips, visible };
+  }
+}
+</script>
+</body>
+</html>

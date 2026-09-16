@@ -1,0 +1,287 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #8fd2ff; }
+    a:hover { color: #b8e4ff; }
+    .noscroll::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #07070d; color: #fff;">
+
+  <!-- ambient colour field the glass refracts -->
+  <div style="position: absolute; inset: 0; background: radial-gradient(115% 75% at 12% -5%, rgba(124,92,255,0.52), transparent 62%), radial-gradient(95% 62% at 96% 12%, rgba(32,208,192,0.34), transparent 58%), radial-gradient(95% 58% at 72% 98%, rgba(255,77,141,0.38), transparent 62%), radial-gradient(80% 48% at 4% 88%, rgba(255,176,32,0.24), transparent 62%);"></div>
+  <div style="position: absolute; inset: 0; opacity: 0.35; background-image: radial-gradient(rgba(255,255,255,0.14) 0.5px, transparent 0.5px); background-size: 3px 3px;"></div>
+
+  <!-- ========================= LIST ========================= -->
+  <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+  <div style="position: absolute; inset: 0; display: flex; flex-direction: column;">
+
+    <div style="height: 56px; flex-shrink: 0;"></div>
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 2px 20px 0;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5);">{{ today }}</div>
+        <div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;">Нотатки</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06)); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.4"></circle><circle cx="19" cy="12" r="1.4"></circle><circle cx="5" cy="12" r="1.4"></circle></svg>
+      </div>
+    </div>
+
+    <!-- search -->
+    <div style="padding: 16px 20px 0; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; border-radius: 23px; background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.05), 0 6px 20px rgba(0,0,0,0.28); cursor: pointer;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <div style="font-size: 15.5px; color: rgba(255,255,255,0.46); font-weight: 500;">Пошук у 6 нотатках</div>
+      </div>
+    </div>
+
+    <!-- folder chips -->
+    <div class="noscroll" style="display: flex; gap: 8px; padding: 14px 20px 0; overflow-x: auto; flex-shrink: 0;">
+      <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="5">
+        <div style="{{ chip.style }}" onClick="{{ chip.pick }}">{{ chip.label }}</div>
+      </sc-for>
+    </div>
+
+    <!-- notes -->
+    <div class="noscroll" style="flex: 1; overflow-y: auto; padding: 16px 20px 128px; display: flex; flex-direction: column; gap: 11px;">
+      <sc-for list="{{ visible }}" as="item" hint-placeholder-count="5">
+        <div style="{{ item.cardStyle }}" onClick="{{ item.open }}">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <sc-if value="{{ item.pinned }}" hint-placeholder-val="{{ false }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ tint }}" stroke="none"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"></path></svg>
+            </sc-if>
+            <div style="flex: 1; font-size: 16.5px; font-weight: 700; letter-spacing: -0.012em; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.title }}</div>
+            <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.44); white-space: nowrap;">{{ item.time }}</div>
+          </div>
+          <div style="font-family: 'Literata', Georgia, serif; font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,0.62); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ item.preview }}</div>
+          <div style="display: flex; align-items: center; gap: 7px; padding-top: 2px;">
+            <div style="width: 6px; height: 6px; border-radius: 3px; background: {{ item.dot }};"></div>
+            <div style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; color: rgba(255,255,255,0.48);">{{ item.folder }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="height: 4px;"></div>
+    </div>
+
+    <!-- floating glass dock -->
+    <div style="position: absolute; left: 20px; right: 20px; bottom: 30px; display: flex; align-items: center; gap: 10px;">
+      <div style="flex: 1; display: flex; align-items: center; justify-content: space-around; height: 62px; padding: 0 8px; border-radius: 31px; background: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055)); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.07), 0 16px 40px rgba(0,0,0,0.45);">
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; border-radius: 23px; background: rgba(255,255,255,0.14); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; cursor: pointer;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.58)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 50px; height: 46px; cursor: pointer;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.58)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 31px; background: linear-gradient(150deg, {{ tintHi }}, {{ tintLo }}); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.32); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(255,255,255,0.1), 0 16px 40px rgba(0,0,0,0.45); cursor: pointer;" onClick="{{ compose }}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </div>
+    </div>
+
+  </div>
+  </sc-if>
+
+  <!-- ========================= EDITOR ========================= -->
+  <sc-if value="{{ isNote }}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; display: flex; flex-direction: column;">
+
+    <div style="height: 56px; flex-shrink: 0;"></div>
+
+    <!-- floating glass nav -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 20px 0; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 10px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;" onClick="{{ back }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>
+        <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.01em;">{{ open.folder }}</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;" onClick="{{ togglePin }}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ pinFill }}" stroke="{{ pinStroke }}" stroke-width="1.7" stroke-linejoin="round"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"></path><path d="M8 7l4-4 4 4"></path><path d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5"></path></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- paper -->
+    <div class="noscroll" style="flex: 1; overflow-y: auto; padding: 20px 20px 132px;">
+      <div style="padding: 24px 22px 26px; border-radius: 30px; background: linear-gradient(160deg, rgba(255,255,255,0.13), rgba(255,255,255,0.045)); backdrop-filter: blur(26px) saturate(175%); -webkit-backdrop-filter: blur(26px) saturate(175%); border: 1px solid rgba(255,255,255,0.15); box-shadow: inset 0 1px 0 rgba(255,255,255,0.36), inset 0 -1px 0 rgba(255,255,255,0.05), 0 18px 46px rgba(0,0,0,0.42);">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.42); margin-bottom: 10px;">{{ open.stamp }}</div>
+        <div style="font-size: 27px; font-weight: 800; letter-spacing: -0.028em; line-height: 1.18; margin-bottom: 16px;">{{ open.title }}</div>
+        <div style="font-family: 'Literata', Georgia, serif; font-size: 15.5px; line-height: 1.72; color: rgba(255,255,255,0.84); white-space: pre-line;">{{ open.body }}</div>
+
+        <div style="display: flex; flex-direction: column; gap: 11px; margin-top: 20px;">
+          <sc-for list="{{ open.todos }}" as="todo" hint-placeholder-count="3">
+            <div style="display: flex; align-items: flex-start; gap: 11px; cursor: pointer;" onClick="{{ todo.toggle }}">
+              <div style="{{ todo.boxStyle }}">
+                <sc-if value="{{ todo.done }}" hint-placeholder-val="{{ true }}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"></path></svg>
+                </sc-if>
+              </div>
+              <div style="{{ todo.textStyle }}">{{ todo.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- formatting dock -->
+    <div style="position: absolute; left: 20px; right: 20px; bottom: 30px; display: flex; align-items: center; gap: 10px;">
+      <div style="flex: 1; display: flex; align-items: center; justify-content: space-around; height: 58px; padding: 0 6px; border-radius: 29px; background: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055)); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.07), 0 16px 40px rgba(0,0,0,0.45);">
+        <div style="display: flex; align-items: center; justify-content: center; width: 46px; height: 44px; cursor: pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19l6-14 6 14M6.6 14h6.8"></path><path d="M17.5 19l3-7 3 7M18.6 16.6h3.8" transform="scale(0.72) translate(6 6)"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 46px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.14); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); cursor: pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6.5l1.8 1.8 3-3.4M3.5 13l1.8 1.8 3-3.4M3.5 19.5l1.8 1.8 3-3.4M11.5 6h9M11.5 12.5h9M11.5 19h9"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 46px; height: 44px; cursor: pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M3.5 17l5-4.5 4 3.5 3-2.5 5 4"></path></svg>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; width: 46px; height: 44px; cursor: pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"></rect><path d="M8 10.5V7.5a4 4 0 018 0v3"></path></svg>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; height: 58px; padding: 0 22px; border-radius: 29px; background: linear-gradient(150deg, {{ tintHi }}, {{ tintLo }}); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.32); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.6), 0 16px 40px rgba(0,0,0,0.45); font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; cursor: pointer;" onClick="{{ back }}">Готово</div>
+    </div>
+
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"tint":{"editor":"color","default":"#7C5CFF","options":["#7C5CFF","#20D0C0","#FF4D8D","#FFB020"]}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      view: 'list',
+      folder: 'Усі',
+      openId: 'n1',
+      pins: { n1: true },
+      done: { 'n1:t1': true },
+    };
+  }
+
+  notes() {
+    return [
+      { id: 'n1', title: 'Ідеї для застосунку', time: '14:32', stamp: 'Сьогодні · 14:32', folder: 'Ідеї', dot: '#7C5CFF',
+        preview: 'Записник із Liquid Glass. Швидкий запис з екрана блокування, теги замість тек, пошук по рукописному тексту.',
+        body: 'Скло має реагувати на те, що під ним. Коли гортаєш список — панель знизу підбирає колір нотатки, яка зараз під нею.\n\nГоловна ставка: відкрити й почати писати за один дотик. Усе інше — другорядне.',
+        todos: [ { id: 't1', label: 'Накидати екран списку' }, { id: 't2', label: 'Продумати швидкий запис із локскрина' }, { id: 't3', label: 'Вирішити: теки чи теги' } ] },
+      { id: 'n2', title: 'Нотатки з зустрічі', time: '11:05', stamp: 'Сьогодні · 11:05', folder: 'Робота', dot: '#20D0C0',
+        preview: 'Домовились: макети до пʼятниці, бекенд бере на себе Данило, реліз орієнтовно 3 жовтня.',
+        body: 'Обговорили строки. Макети — до пʼятниці, далі тиждень на збірку.\n\nВідкрите питання: чи встигаємо з синхронізацією до релізу, чи виносимо в наступну версію.',
+        todos: [ { id: 't1', label: 'Скинути макети в чат' }, { id: 't2', label: 'Уточнити формат API' } ] },
+      { id: 'n3', title: 'Список покупок', time: '19:48', stamp: 'Учора · 19:48', folder: 'Побут', dot: '#FFB020',
+        preview: 'Оливкова олія · кава · хліб · помідори · сир · вівсянка · мед',
+        body: 'Зайти спершу на ринок, потім у магазин — на ринку дешевші помідори й зелень.',
+        todos: [ { id: 't1', label: 'Оливкова олія' }, { id: 't2', label: 'Кава в зернах' }, { id: 't3', label: 'Хліб на заквасці' } ] },
+      { id: 'n4', title: 'Книжки на осінь', time: '08:20', stamp: 'Учора · 08:20', folder: 'Особисте', dot: '#FF4D8D',
+        preview: 'Стус — Палімпсести. Андрухович — Московіада. Мартін — Чистий код.',
+        body: 'Почати з Палімпсестів — давно збирався. Далі за настроєм.',
+        todos: [ { id: 't1', label: 'Замовити Палімпсести' }, { id: 't2', label: 'Знайти Московіаду в бібліотеці' } ] },
+      { id: 'n5', title: 'Рецепт борщу', time: '20:15', stamp: '12 вересня · 20:15', folder: 'Побут', dot: '#FFB020',
+        preview: 'Буряк натерти й гасити окремо з томатом і краплею оцту — тоді колір не втратиться.',
+        body: 'Ключове — буряк окремо. Якщо кинути одразу в каструлю, борщ вийде рудим.\n\nКвасолю замочити з вечора.',
+        todos: [ { id: 't1', label: 'Замочити квасолю' }, { id: 't2', label: 'Купити томатну пасту' } ] },
+      { id: 'n6', title: 'Питання до лікаря', time: '09:30', stamp: '11 вересня · 09:30', folder: 'Особисте', dot: '#FF4D8D',
+        preview: 'Аналізи, дозування, чи можна поєднувати з вітаміном D.',
+        body: 'Записати відповіді прямо тут, щоб потім не згадувати по памʼяті.',
+        todos: [ { id: 't1', label: 'Взяти результати аналізів' } ] },
+    ];
+  }
+
+  chipStyle(active) {
+    const base = 'display:flex; align-items:center; height:38px; padding:0 17px; border-radius:19px; font-size:14px; font-weight:700; letter-spacing:-0.01em; white-space:nowrap; cursor:pointer; backdrop-filter:blur(22px) saturate(180%); -webkit-backdrop-filter:blur(22px) saturate(180%);';
+    if (active) {
+      return base + ' background:linear-gradient(145deg, rgba(255,255,255,0.42), rgba(255,255,255,0.22)); border:1px solid rgba(255,255,255,0.45); color:#0d0d14; box-shadow:inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(0,0,0,0.3);';
+    }
+    return base + ' background:linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04)); border:1px solid rgba(255,255,255,0.14); color:rgba(255,255,255,0.72); box-shadow:inset 0 1px 0 rgba(255,255,255,0.28);';
+  }
+
+  cardStyle(pinned, tint) {
+    const base = 'display:flex; flex-direction:column; gap:6px; padding:15px 16px 14px; border-radius:23px; cursor:pointer; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.055), 0 12px 32px rgba(0,0,0,0.34);';
+    if (pinned) {
+      return base + ' background:linear-gradient(145deg, rgba(255,255,255,0.22), rgba(255,255,255,0.07)); border:1px solid ' + tint + '66;';
+    }
+    return base + ' background:linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05)); border:1px solid rgba(255,255,255,0.16);';
+  }
+
+  renderVals() {
+    const tint = this.props.tint ?? '#7C5CFF';
+    const st = this.state;
+    const all = this.notes();
+
+    const withPins = all.map((n) => ({ ...n, pinned: !!st.pins[n.id] }));
+    withPins.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+    const folders = ['Усі', 'Ідеї', 'Робота', 'Побут', 'Особисте'];
+    const chips = folders.map((f) => ({
+      label: f,
+      style: this.chipStyle(f === st.folder),
+      pick: () => this.setState({ folder: f }),
+    }));
+
+    const visible = withPins
+      .filter((n) => st.folder === 'Усі' || n.folder === st.folder)
+      .map((n) => ({
+        ...n,
+        cardStyle: this.cardStyle(n.pinned, tint),
+        open: () => this.setState({ view: 'note', openId: n.id }),
+      }));
+
+    const openNote = withPins.find((n) => n.id === st.openId) || withPins[0];
+    const openPinned = !!st.pins[openNote.id];
+
+    const todos = (openNote.todos || []).map((t) => {
+      const key = openNote.id + ':' + t.id;
+      const done = !!st.done[key];
+      const box = 'display:flex; align-items:center; justify-content:center; width:23px; height:23px; flex-shrink:0; margin-top:1px; border-radius:8px; ' +
+        (done
+          ? 'background:' + tint + '; border:1px solid rgba(255,255,255,0.4); box-shadow:inset 0 1px 0 rgba(255,255,255,0.45);'
+          : 'background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.26);');
+      const txt = "font-family:'Literata', Georgia, serif; font-size:14.5px; line-height:1.5; " +
+        (done ? 'color:rgba(255,255,255,0.4); text-decoration:line-through;' : 'color:rgba(255,255,255,0.82);');
+      return {
+        ...t, done, boxStyle: box, textStyle: txt,
+        toggle: () => this.setState({ done: { ...st.done, [key]: !done } }),
+      };
+    });
+
+    return {
+      tint,
+      tintHi: tint + 'E6',
+      tintLo: tint + '8C',
+      today: 'Вівторок, 16 вересня',
+      isList: st.view === 'list',
+      isNote: st.view === 'note',
+      chips,
+      visible,
+      open: { ...openNote, todos },
+      pinFill: openPinned ? tint : 'none',
+      pinStroke: openPinned ? tint : 'rgba(255,255,255,0.92)',
+      back: () => this.setState({ view: 'list' }),
+      compose: () => this.setState({ view: 'note', openId: 'n1' }),
+      togglePin: () => this.setState({ pins: { ...st.pins, [openNote.id]: !openPinned } }),
+    };
+  }
+}
+</script>
+</body>
+</html>

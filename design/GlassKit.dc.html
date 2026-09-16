@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Literata:opsz,wght@7..72,400&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #8fd2ff; }
+    a:hover { color: #b8e4ff; }
+    .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 880px; height: 700px; overflow: hidden; background: #07070d; color: #fff;">
+
+  <div style="position: absolute; inset: 0; background: radial-gradient(70% 80% at 6% 0%, rgba(124,92,255,0.46), transparent 60%), radial-gradient(60% 70% at 52% 110%, rgba(255,77,141,0.34), transparent 60%), radial-gradient(60% 75% at 96% 8%, rgba(32,208,192,0.36), transparent 58%), radial-gradient(50% 60% at 78% 96%, rgba(255,176,32,0.26), transparent 62%);"></div>
+  <div style="position: absolute; inset: 0; opacity: 0.3; background-image: radial-gradient(rgba(255,255,255,0.14) 0.5px, transparent 0.5px); background-size: 3px 3px;"></div>
+
+  <div style="position: relative; height: 100%; overflow-y: auto; padding: 32px 36px; display: flex; flex-direction: column; gap: 24px;">
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.48);">Записник · матеріал</div>
+        <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;">Скло, з якого зібрано застосунок</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <sc-for list="{{ palette }}" as="p" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 40px; height: 40px; border-radius: 14px; background: {{ p.hex }}; border: 1px solid rgba(255,255,255,0.3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);"></div>
+            <div class="mono" style="font-size: 9.5px; color: rgba(255,255,255,0.5); letter-spacing: 0.02em;">{{ p.hex }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- tiers -->
+    <div style="display: flex; flex-direction: column; gap: 11px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.46);">Три глибини</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
+        <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+          <div style="{{ t.style }}">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+              <div style="font-size: 17px; font-weight: 800; letter-spacing: -0.02em;">{{ t.name }}</div>
+              <div class="mono" style="font-size: 10.5px; color: rgba(255,255,255,0.52);">{{ t.blur }}</div>
+            </div>
+            <div style="font-family: 'Literata', Georgia, serif; font-size: 12.5px; line-height: 1.55; color: rgba(255,255,255,0.68);">{{ t.use }}</div>
+            <div class="mono" style="font-size: 10px; line-height: 1.7; color: rgba(255,255,255,0.46); padding-top: 3px; border-top: 1px solid rgba(255,255,255,0.12);">{{ t.spec }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div style="display: flex; flex-direction: column; gap: 11px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.46);">Елементи керування</div>
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+
+        <div style="display: flex; align-items: center; height: 38px; padding: 0 17px; border-radius: 19px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; background: linear-gradient(145deg, rgba(255,255,255,0.42), rgba(255,255,255,0.22)); backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%); border: 1px solid rgba(255,255,255,0.45); color: #0d0d14; box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(0,0,0,0.3);">Активний</div>
+
+        <div style="display: flex; align-items: center; height: 38px; padding: 0 17px; border-radius: 19px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; background: linear-gradient(145deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04)); backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%); border: 1px solid rgba(255,255,255,0.14); color: rgba(255,255,255,0.72); box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);">Звичайний</div>
+
+        <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: center; height: 52px; padding: 0 24px; border-radius: 26px; font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; background: linear-gradient(150deg, {{ tintHi }}, {{ tintLo }}); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.32); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.6), 0 14px 34px rgba(0,0,0,0.42);">Головна дія</div>
+
+        <div style="display: flex; align-items: center; gap: 2px; height: 54px; padding: 0 7px; border-radius: 27px; background: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055)); backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.5), 0 14px 34px rgba(0,0,0,0.42);">
+          <sc-for list="{{ dock }}" as="d" hint-placeholder-count="3">
+            <div style="{{ d.style }}">
+              <div style="width: 15px; height: 15px; border-radius: 5px; border: 2px solid {{ d.stroke }};"></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 9px; height: 44px; padding: 0 16px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 20px rgba(0,0,0,0.28);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <div style="font-size: 14.5px; color: rgba(255,255,255,0.46); font-weight: 500;">Пошук</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- rules -->
+    <div style="display: flex; flex-direction: column; gap: 11px;">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.46);">Правила, які тримають вигляд</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 7px; padding: 14px 15px 15px; border-radius: 18px; background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.11);">
+            <div style="font-size: 13.5px; font-weight: 800; letter-spacing: -0.015em; color: {{ r.tint }};">{{ r.title }}</div>
+            <div style="font-family: 'Literata', Georgia, serif; font-size: 12px; line-height: 1.55; color: rgba(255,255,255,0.66);">{{ r.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"tint":{"editor":"color","default":"#7C5CFF","options":["#7C5CFF","#20D0C0","#FF4D8D","#FFB020"]}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tint = this.props.tint ?? '#7C5CFF';
+
+    const tierStyle = (bg, border, blur, shadow) =>
+      'display:flex; flex-direction:column; gap:8px; padding:16px 17px 15px; border-radius:20px; background:' + bg +
+      '; backdrop-filter:blur(' + blur + 'px) saturate(180%); -webkit-backdrop-filter:blur(' + blur + 'px) saturate(180%); border:1px solid ' + border +
+      '; box-shadow:' + shadow + ';';
+
+    const tiers = [
+      { name: 'Тонке', blur: 'blur 20 · 13 %',
+        use: 'Картки нотаток у списку. Ледь тримає форму, щоб колір тла проходив наскрізь.',
+        spec: 'fill 0.155 → 0.05\nstroke 0.16 · radius 23',
+        style: tierStyle('linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05))', 'rgba(255,255,255,0.16)', 20, 'inset 0 1px 0 rgba(255,255,255,0.4), 0 12px 32px rgba(0,0,0,0.34)') },
+      { name: 'Середнє', blur: 'blur 24 · 19 %',
+        use: 'Пошук, кнопки навігації, аркуш нотатки. Читається як окремий шар над тлом.',
+        spec: 'fill 0.19 → 0.06\nstroke 0.20 · radius 22',
+        style: tierStyle('linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06))', 'rgba(255,255,255,0.20)', 24, 'inset 0 1px 0 rgba(255,255,255,0.45), 0 12px 32px rgba(0,0,0,0.38)') },
+      { name: 'Щільне', blur: 'blur 30 · 19 % + sat 200',
+        use: 'Плаваюча панель знизу. Єдиний елемент, що завжди поверх контенту.',
+        spec: 'fill 0.19 → 0.055\nstroke 0.20 · radius 31',
+        style: tierStyle('linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055))', 'rgba(255,255,255,0.20)', 30, 'inset 0 1.5px 0 rgba(255,255,255,0.5), 0 16px 40px rgba(0,0,0,0.45)') },
+    ];
+
+    const dockItem = (active) =>
+      'display:flex; align-items:center; justify-content:center; width:46px; height:40px; border-radius:20px;' +
+      (active ? ' background:rgba(255,255,255,0.14); box-shadow:inset 0 1px 0 rgba(255,255,255,0.3);' : '');
+
+    const dock = [
+      { style: dockItem(true), stroke: '#ffffff' },
+      { style: dockItem(false), stroke: 'rgba(255,255,255,0.5)' },
+      { style: dockItem(false), stroke: 'rgba(255,255,255,0.5)' },
+    ];
+
+    const palette = [
+      { hex: '#7C5CFF' }, { hex: '#20D0C0' }, { hex: '#FF4D8D' }, { hex: '#FFB020' },
+    ];
+
+    const rules = [
+      { title: 'Світло завжди згори', tint: '#A78BFF',
+        body: 'Верхній внутрішній штрих світліший за нижній. Це те, що читається як товщина скла, а не як прозорий прямокутник.' },
+      { title: 'Скло любить колір', tint: '#4FE0D2',
+        body: 'Під шаром завжди має бути насичене тло. На сірому фоні матеріал зникає і виглядає брудно.' },
+      { title: 'Один шар поверх', tint: '#FF7DAB',
+        body: 'Панель знизу — єдине, що плаває над контентом. Двоє плаваючих скляних шарів одразу читаються як безлад.' },
+      { title: 'Радіуси концентричні', tint: '#FFC658',
+        body: 'Вкладений елемент має радіус на величину відступу менший за батьківський, інакше кути розʼїжджаються.' },
+    ];
+
+    return { tiers, dock, palette, rules, tint, tintHi: tint + 'E6', tintLo: tint + '8C' };
+  }
+}
+</script>
+</body>
+</html>

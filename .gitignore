@@ -16,3 +16,6 @@ xcuserdata/
 # macOS / Windows
 .DS_Store
 Thumbs.db
+
+# Зібране полотно дизайну — генерується з design/*.dc.html
+design/sklo-notes.html

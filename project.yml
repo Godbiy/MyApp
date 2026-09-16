@@ -1,4 +1,4 @@
-name: MyApp
+name: Sklo
 
 options:
   bundleIdPrefix: com.godbiy
@@ -15,16 +15,16 @@ settings:
     CODE_SIGN_STYLE: Manual
 
 targets:
-  MyApp:
+  Sklo:
     type: application
     platform: iOS
     sources:
-      - path: Sources/MyApp
+      - path: Sources/Sklo
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.godbiy.myapp
-        PRODUCT_NAME: MyApp
-        INFOPLIST_FILE: Sources/MyApp/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.godbiy.sklo
+        PRODUCT_NAME: Sklo
+        INFOPLIST_FILE: Sources/Sklo/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1,2"

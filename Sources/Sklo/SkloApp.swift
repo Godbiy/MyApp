@@ -1,10 +1,10 @@
 import SwiftUI
 
 @main
-struct MyAppApp: App {
+struct SkloApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }

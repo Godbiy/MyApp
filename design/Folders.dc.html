@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Literata:opsz,wght@7..72,400&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #8fd2ff; }
+    a:hover { color: #b8e4ff; }
+    .noscroll::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #07070d; color: #fff;">
+
+  <div style="position: absolute; inset: 0; background: radial-gradient(110% 70% at 88% -5%, rgba(32,208,192,0.44), transparent 60%), radial-gradient(100% 65% at 8% 18%, rgba(124,92,255,0.42), transparent 60%), radial-gradient(95% 58% at 30% 100%, rgba(255,176,32,0.30), transparent 62%), radial-gradient(85% 50% at 96% 84%, rgba(255,77,141,0.32), transparent 62%);"></div>
+  <div style="position: absolute; inset: 0; opacity: 0.35; background-image: radial-gradient(rgba(255,255,255,0.14) 0.5px, transparent 0.5px); background-size: 3px 3px;"></div>
+
+  <div style="position: absolute; inset: 0; display: flex; flex-direction: column;">
+
+    <div style="height: 56px; flex-shrink: 0;"></div>
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 2px 20px 0; flex-shrink: 0;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5);">6 нотаток</div>
+        <div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;">Теки</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06)); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.20); box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 8px 24px rgba(0,0,0,0.35); cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </div>
+    </div>
+
+    <div class="noscroll" style="flex: 1; overflow-y: auto; padding: 20px 20px 40px; display: flex; flex-direction: column; gap: 22px;">
+
+      <!-- smart collections -->
+      <div style="display: flex; flex-direction: column; gap: 11px;">
+        <div style="font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.46); padding-left: 4px;">Розумні добірки</div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;">
+          <sc-for list="{{ smart }}" as="s" hint-placeholder-count="4">
+            <div style="{{ s.style }}" onClick="{{ s.pick }}">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 13px; background: {{ s.tint }}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);">
+                  <div style="{{ s.icon }}"></div>
+                </div>
+                <div style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em; color: rgba(255,255,255,0.92);">{{ s.count }}</div>
+              </div>
+              <div style="font-size: 14.5px; font-weight: 700; letter-spacing: -0.012em; color: #fff;">{{ s.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- folders -->
+      <div style="display: flex; flex-direction: column; gap: 11px;">
+        <div style="font-size: 12.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.46); padding-left: 4px;">Мої теки</div>
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <sc-for list="{{ folders }}" as="f" hint-placeholder-count="5">
+            <div style="{{ f.style }}" onClick="{{ f.pick }}">
+              <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 14px; background: {{ f.tint }}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.012em; color: #fff;">{{ f.label }}</div>
+                <div style="font-family: 'Literata', Georgia, serif; font-size: 12.5px; color: rgba(255,255,255,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ f.last }}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 9px; flex-shrink: 0;">
+                <div style="font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,0.5);">{{ f.count }}</div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"tint":{"editor":"color","default":"#7C5CFF","options":["#7C5CFF","#20D0C0","#FF4D8D","#FFB020"]}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { picked: 'Ідеї' };
+  }
+
+  tile(active) {
+    const base = 'display:flex; flex-direction:column; gap:14px; padding:15px 15px 16px; border-radius:22px; cursor:pointer; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 12px 30px rgba(0,0,0,0.32);';
+    return base + (active
+      ? ' background:linear-gradient(145deg, rgba(255,255,255,0.26), rgba(255,255,255,0.09)); border:1px solid rgba(255,255,255,0.4);'
+      : ' background:linear-gradient(145deg, rgba(255,255,255,0.145), rgba(255,255,255,0.048)); border:1px solid rgba(255,255,255,0.15);');
+  }
+
+  row(active) {
+    const base = 'display:flex; align-items:center; gap:13px; padding:12px 14px; border-radius:20px; cursor:pointer; backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%); box-shadow:inset 0 1px 0 rgba(255,255,255,0.38), 0 10px 26px rgba(0,0,0,0.3);';
+    return base + (active
+      ? ' background:linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.085)); border:1px solid rgba(255,255,255,0.38);'
+      : ' background:linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.045)); border:1px solid rgba(255,255,255,0.145);');
+  }
+
+  dot(color) {
+    return 'width:15px; height:15px; border-radius:5px; background:rgba(255,255,255,0.95); box-shadow:0 0 0 3px ' + color + '55;';
+  }
+
+  renderVals() {
+    const st = this.state;
+    const pick = (id) => () => this.setState({ picked: id });
+
+    const smart = [
+      { id: 'Закріплені', label: 'Закріплені', count: '1', tint: 'linear-gradient(145deg,#7C5CFF,#5B3FD6)' },
+      { id: 'Сьогодні', label: 'Сьогодні', count: '2', tint: 'linear-gradient(145deg,#20D0C0,#12A294)' },
+      { id: 'Списки', label: 'Списки справ', count: '6', tint: 'linear-gradient(145deg,#FFB020,#E08A00)' },
+      { id: 'Спільні', label: 'Спільні', count: '0', tint: 'linear-gradient(145deg,#FF4D8D,#D42A68)' },
+    ].map((s) => ({ ...s, style: this.tile(st.picked === s.id), icon: this.dot(s.id === 'Закріплені' ? '#7C5CFF' : s.id === 'Сьогодні' ? '#20D0C0' : s.id === 'Списки' ? '#FFB020' : '#FF4D8D'), pick: pick(s.id) }));
+
+    const folders = [
+      { id: 'Ідеї', label: 'Ідеї', count: '1', last: 'Ідеї для застосунку', tint: 'linear-gradient(145deg,#7C5CFF,#5B3FD6)' },
+      { id: 'Робота', label: 'Робота', count: '1', last: 'Нотатки з зустрічі', tint: 'linear-gradient(145deg,#20D0C0,#12A294)' },
+      { id: 'Побут', label: 'Побут', count: '2', last: 'Список покупок', tint: 'linear-gradient(145deg,#FFB020,#E08A00)' },
+      { id: 'Особисте', label: 'Особисте', count: '2', last: 'Книжки на осінь', tint: 'linear-gradient(145deg,#FF4D8D,#D42A68)' },
+    ].map((f) => ({ ...f, style: this.row(st.picked === f.id), pick: pick(f.id) }));
+
+    return { smart, folders };
+  }
+}
+</script>
+</body>
+</html>

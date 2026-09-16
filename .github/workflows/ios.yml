@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PROJECT: MyApp.xcodeproj
-  SCHEME: MyApp
-  APP_NAME: MyApp
+  PROJECT: Sklo.xcodeproj
+  SCHEME: Sklo
+  APP_NAME: Sklo
 
 permissions:
   contents: write
