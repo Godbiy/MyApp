@@ -21,7 +21,7 @@ iOS-застосунок на SwiftUI. Збирається виключно в 
 4. Розпакувати zip — усередині `MyApp-unsigned.ipa`.
 
 Або постійним посиланням, яке оновлюється при кожному пуші в `main`:
-<https://github.com/Godbiy/MyApp/releases/latest>
+<https://github.com/Godbiy/MyApp/releases/download/latest/MyApp-unsigned.ipa>
 
 Або через CLI:
 
@@ -36,7 +36,7 @@ gh run download --name MyApp-unsigned-ipa
 
 У `dist/` лежить закомічена збірка — щоб `.ipa` був видно прямо в репо.
 Це **знімок на момент коміту**: він не оновлюється сам і застаріває, щойно
-зміниться код. За свіжою збіркою завжди йди в `releases/latest` або
+зміниться код. За свіжою збіркою завжди йди в реліз `latest` або
 `gh run download`.
 
 Тримати бінарники в git загалом не варто — вони лишаються в історії назавжди,

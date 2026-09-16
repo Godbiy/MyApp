@@ -80,7 +80,7 @@ mkdir -p Payload && cp -R MyApp.app Payload/ && zip -qry MyApp-unsigned.ipa Payl
 **Постійне посилання на свіжу збірку** — оновлюється автоматично при кожному пуші в `main`:
 
 ```
-https://github.com/Godbiy/MyApp/releases/latest
+https://github.com/Godbiy/MyApp/releases/download/latest/MyApp-unsigned.ipa
 ```
 
 **Через термінал:**
@@ -93,7 +93,9 @@ gh run download --name MyApp-unsigned-ipa
 
 **Через вкладку Actions:** репо → **Actions** → останній зелений ран → донизу до **Artifacts** → `MyApp-unsigned-ipa`.
 
-> У теці `dist/` лежить закомічений `.ipa` — це **знімок на момент коміту**, він не оновлюється сам. Для актуальної збірки завжди бери `releases/latest`.
+> У теці `dist/` лежить закомічений `.ipa` — це **знімок на момент коміту**, він не оновлюється сам. Для актуальної збірки завжди бери реліз `latest`.
+
+> **Чому посилання таке довге, а не звичне `/releases/latest`.** Реліз `latest` позначений як пререліз, щоб не перебивати справжні версійні релізи з тегів `v*` у списку. А шорткат `/releases/latest/` у GitHub пререлізи навмисно пропускає — і віддає 404. Пряме посилання по тегу працює незалежно від цього.
 
 ---
 
