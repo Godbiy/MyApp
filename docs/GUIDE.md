@@ -33,11 +33,11 @@
 
 **3. Install XcodeGen** — `brew install xcodegen`, ~20 секунд.
 
-**4. Generate Xcode project** — читає `project.yml` і створює `MyApp.xcodeproj`.
+**4. Generate Xcode project** — читає `project.yml` і створює `Sklo.xcodeproj`.
 
 > **Чому `.xcodeproj` не лежить у git.** Файл проєкту Xcode — це XML на тисячі рядків, де кожен Swift-файл прописаний вручну з UUID-ами. Створити його без Xcode неможливо, а редагувати з Windows — самогубство. XcodeGen перевертає логіку: проєкт описується в ~30 рядках YAML, а `.xcodeproj` стає розхідником, який генерується щоразу заново. Саме тому він у `.gitignore`.
 >
-> **Практичний наслідок:** новий Swift-файл просто кладеться у `Sources/MyApp/` — ніде більше реєструвати не треба, бо `project.yml` включає теку цілком.
+> **Практичний наслідок:** новий Swift-файл просто кладеться у `Sources/Sklo/` — ніде більше реєструвати не треба, бо `project.yml` включає теку цілком.
 
 **5. Build for simulator** — компіляція під симулятор у Debug.
 
@@ -58,7 +58,7 @@ CODE_SIGN_IDENTITY=""  CODE_SIGNING_REQUIRED=NO  CODE_SIGNING_ALLOWED=NO
 **7. Package unsigned .ipa** — пакування вручну:
 
 ```bash
-mkdir -p Payload && cp -R MyApp.app Payload/ && zip -qry MyApp-unsigned.ipa Payload
+mkdir -p Payload && cp -R Sklo.app Payload/ && zip -qry Sklo-unsigned.ipa Payload
 ```
 
 > **Чому не штатний `xcodebuild -exportArchive`.** Він обов'язково вимагає сертифікат і provisioning profile, тобто платний акаунт. Але `.ipa` за своєю природою — звичайний zip, усередині якого тека `Payload/<Name>.app`. Формат відкритий, тож ми збираємо його самі.
@@ -80,18 +80,18 @@ mkdir -p Payload && cp -R MyApp.app Payload/ && zip -qry MyApp-unsigned.ipa Payl
 **Постійне посилання на свіжу збірку** — оновлюється автоматично при кожному пуші в `main`:
 
 ```
-https://github.com/Godbiy/MyApp/releases/download/latest/MyApp-unsigned.ipa
+https://github.com/Godbiy/MyApp/releases/download/latest/Sklo-unsigned.ipa
 ```
 
 **Через термінал:**
 
 ```bash
-gh run download --name MyApp-unsigned-ipa
+gh run download --name Sklo-unsigned-ipa
 ```
 
 Забирає з останньої успішної збірки й одразу розпаковує — `.ipa` опиняється в поточній теці.
 
-**Через вкладку Actions:** репо → **Actions** → останній зелений ран → донизу до **Artifacts** → `MyApp-unsigned-ipa`.
+**Через вкладку Actions:** репо → **Actions** → останній зелений ран → донизу до **Artifacts** → `Sklo-unsigned-ipa`.
 
 > У теці `dist/` лежить закомічений `.ipa` — це **знімок на момент коміту**, він не оновлюється сам. Для актуальної збірки завжди бери реліз `latest`.
 
@@ -126,11 +126,11 @@ Sideloadly спілкується з айфоном через драйвери 
 
 1. Під'єднати айфон кабелем, на телефоні підтвердити **Довіряти цьому комп'ютеру**.
 2. Відкрити Sideloadly — він має побачити пристрій.
-3. Перетягнути `MyApp-unsigned.ipa` у вікно.
+3. Перетягнути `Sklo-unsigned.ipa` у вікно.
 4. Вписати свій **Apple ID**, натиснути **Start**.
 5. Ввести пароль. За ввімкненої двофакторки знадобиться [app-specific password](https://appleid.apple.com), а не звичайний пароль.
 
-> **Порада, яка економить нерви:** Sideloadly дозволяє задати Bundle ID. Постав його раз (`com.godbiy.myapp`) і **не міняй між переустановками**. Безкоштовний акаунт має ліміт 10 App ID на 7 днів — якщо щоразу генерувати новий, ліміт вигорить за пару днів, і ти застрягнеш до кінця тижня.
+> **Порада, яка економить нерви:** Sideloadly дозволяє задати Bundle ID. Постав його раз (`com.godbiy.sklo`) і **не міняй між переустановками**. Безкоштовний акаунт має ліміт 10 App ID на 7 днів — якщо щоразу генерувати новий, ліміт вигорить за пару днів, і ти застрягнеш до кінця тижня.
 
 ### Крок 4. Довірити сертифікат
 
@@ -158,7 +158,7 @@ Sideloadly спілкується з айфоном через драйвери 
 ## 4. Щоденний цикл розробки
 
 ```bash
-# 1. правиш або додаєш файли в Sources/MyApp/
+# 1. правиш або додаєш файли в Sources/Sklo/
 
 # 2. пушиш
 git add -A && git commit -m "що зробив" && git push
@@ -167,7 +167,7 @@ git add -A && git commit -m "що зробив" && git push
 gh run watch
 
 # 4. забираєш збірку
-gh run download --name MyApp-unsigned-ipa
+gh run download --name Sklo-unsigned-ipa
 
 # 5. перетягуєш .ipa у Sideloadly -> Start
 ```

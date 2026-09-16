@@ -1,6 +1,6 @@
-# MyApp
+# Скло
 
-iOS-застосунок на SwiftUI. Збирається виключно в GitHub Actions на macOS-раннері —
+Записник для iPhone у стилі Liquid Glass. SwiftUI, мінімум iOS 17. Збирається виключно в GitHub Actions на macOS-раннері —
 локальний Mac або Xcode не потрібні.
 
 ## Як це влаштовано
@@ -8,7 +8,8 @@ iOS-застосунок на SwiftUI. Збирається виключно в 
 | Файл | Навіщо |
 |---|---|
 | `project.yml` | Опис Xcode-проєкту для [XcodeGen](https://github.com/yonaskolb/XcodeGen). Сам `.xcodeproj` у git **не** лежить — генерується в CI. |
-| `Sources/MyApp/` | Код застосунку + `Info.plist` + асети. |
+| `Sources/Sklo/` | Код застосунку + `Info.plist` + асети. |
+| `design/` | Джерела дизайн-полотна (`*.dc.html`). Звідти взяті числа скла. |
 | `.github/workflows/ios.yml` | Збірка: перевірка під симулятор → unsigned archive під пристрій → пакування `.ipa`. |
 
 **Повна інструкція — [docs/GUIDE.md](docs/GUIDE.md).** Нижче стисла версія.
@@ -17,17 +18,17 @@ iOS-застосунок на SwiftUI. Збирається виключно в 
 
 1. Пушнути в `main` (або запустити workflow вручну: вкладка **Actions** → *iOS Build* → **Run workflow**).
 2. Дочекатися завершення джоби, відкрити її сторінку.
-3. Внизу в секції **Artifacts** завантажити `MyApp-unsigned-ipa`.
-4. Розпакувати zip — усередині `MyApp-unsigned.ipa`.
+3. Внизу в секції **Artifacts** завантажити `Sklo-unsigned-ipa`.
+4. Розпакувати zip — усередині `Sklo-unsigned.ipa`.
 
 Або постійним посиланням, яке оновлюється при кожному пуші в `main`:
-<https://github.com/Godbiy/MyApp/releases/download/latest/MyApp-unsigned.ipa>
+<https://github.com/Godbiy/MyApp/releases/download/latest/Sklo-unsigned.ipa>
 
 Або через CLI:
 
 ```bash
 gh run watch                       # стежити за поточною збіркою
-gh run download --name MyApp-unsigned-ipa
+gh run download --name Sklo-unsigned-ipa
 ```
 
 Теги виду `v1.0.0` додатково створюють окремий іменований GitHub Release.
@@ -63,9 +64,9 @@ gh run download --name MyApp-unsigned-ipa
 
 ## Розробка
 
-Редагуємо `Sources/MyApp/*.swift` — нові файли підхоплюються автоматично,
+Редагуємо `Sources/Sklo/*.swift` — нові файли підхоплюються автоматично,
 бо `project.yml` включає теку цілком, і перелічувати їх десь окремо не треба.
 
 Щоб перейменувати застосунок: `project.yml` (`name`, `PRODUCT_NAME`,
 `PRODUCT_BUNDLE_IDENTIFIER`), `.github/workflows/ios.yml` (блок `env`),
-`Sources/MyApp/Info.plist` (`CFBundleDisplayName`) і назва теки.
+`Sources/Sklo/Info.plist` (`CFBundleDisplayName`) і назва теки.
