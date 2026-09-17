@@ -136,12 +136,35 @@ jobs:
           fi
           echo "VNC_USER=$AUTH_OK" >> "$GITHUB_ENV"
 
-          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
-            -activate -configure -access -on \
+          KICK=/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart
+
+          # Тут був недогляд: доступ вмикався, але не казалось, кому саме.
+          # Пароль підходив, а права не було — звідси й відмова на вході.
+          sudo "$KICK" -activate -configure -access -on \
+            -allowAccessFor -allUsers -privs -all \
             -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "$PW" \
-            -restart -agent -privs -all
+            -restart -agent
+
           sleep 5
           nc -z localhost 5900 && echo "екран віддається на 5900" || echo "::warning::порт 5900 мовчить"
+
+          # Діагностика поруч із адресою: якщо вхід знову не спрацює, причина
+          # має бути в мене на руках, а не за сторінкою, яку API не віддає.
+          mkdir -p "$RUNNER_TEMP/link"
+          {
+            echo "=== стан входу ==="
+            echo "обраний користувач: $AUTH_OK"
+            echo "консольний сеанс належить: $(stat -f '%Su' /dev/console)"
+            echo ""
+            echo "перевірка пароля:"
+            dscl . -authonly runner "$PW" 2>&1 && echo "  runner: так" || echo "  runner: ні"
+            dscl . -authonly vnc "$PW" 2>&1 && echo "  vnc: так" || echo "  vnc: ні"
+            echo ""
+            echo "групи vnc: $(id -Gn vnc 2>&1)"
+            echo "налаштування ARD:"
+            sudo defaults read /Library/Preferences/com.apple.RemoteManagement 2>&1 | head -20
+          } > "$RUNNER_TEMP/link/auth-report.txt" 2>&1
+          cat "$RUNNER_TEMP/link/auth-report.txt"
 
       - name: Publish the screen to a browser
         run: |
@@ -216,7 +239,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: desktop-url
-          path: ${{ runner.temp }}/link/desktop-url.txt
+          path: ${{ runner.temp }}/link/*.txt
           if-no-files-found: error
 
       - name: Hold the session open
