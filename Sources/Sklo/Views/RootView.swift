@@ -4,7 +4,7 @@ struct RootView: View {
     @State private var store = NoteStore()
     @State private var settings = Settings()
 
-    @State private var pane = 0
+    @State private var pane = UILaunch.pane
     @State private var openNote: UUID?
     @State private var folder: Folder?
     @State private var searching = false
@@ -40,6 +40,13 @@ struct RootView: View {
         .preferredColorScheme(settings.theme.colorScheme)
         .tint(settings.accent)
         .animation(settings.motion ? .spring(response: 0.38, dampingFraction: 0.86) : nil, value: openNote)
+        .task {
+            // Знімки в CI: єдиний спосіб побачити кожен екран, коли під рукою
+            // немає ні Mac, ні пристрою. На звичайному запуску нічого не робить.
+            if UILaunch.opensFirstNote, let first = store.notes.first {
+                openNote = first.id
+            }
+        }
         .sheet(isPresented: $newFolderSheet) {
             NewFolderSheet(store: store) { created in
                 folder = created
@@ -141,6 +148,24 @@ struct RootView: View {
         default:
             openNote = store.createNote(in: folder).id
         }
+    }
+}
+
+
+/// Прапорці запуску для знімків у CI. У звичайному запуску їх немає, тож усе
+/// лишається як є — це діагностика, а не прихована функція.
+enum UILaunch {
+    private static var args: [String] { ProcessInfo.processInfo.arguments }
+
+    static var pane: Int {
+        guard let i = args.firstIndex(of: "-uiPane"),
+              i + 1 < args.count,
+              let value = Int(args[i + 1]) else { return 0 }
+        return min(2, max(0, value))
+    }
+
+    static var opensFirstNote: Bool {
+        args.contains("-uiOpenNote")
     }
 }
 

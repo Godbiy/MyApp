@@ -57,11 +57,12 @@ struct NotesPane: View {
                 .buttonStyle(PressScale(scale: 0.92))
                 .flatGlass(radius: 19)
             }
-            // Відступ зсередини, щоб край прокрутки збігався з краєм карток
-            // і чіпи ховались рівно під ним, а не бігли до краю екрана.
-            .padding(.horizontal, 20)
         }
         .scrollIndicators(.hidden)
+        // Відступ на самому вікні прокрутки, а не на вмісті: тоді край
+        // обрізання збігається з краєм карток і чіпи ховаються рівно під ним,
+        // а не біжать до краю екрана.
+        .padding(.horizontal, 20)
         .padding(.top, 14)
         .padding(.bottom, 2)
     }

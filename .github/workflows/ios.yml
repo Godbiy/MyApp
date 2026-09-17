@@ -128,18 +128,30 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           mkdir -p "$RUNNER_TEMP/shots"
 
+          # Застосунок сам уміє відкритись на потрібному екрані — тап
+          # симулятору не надішлеш, а бачити треба кожен.
           shoot() {
-            sleep "$2"
-            xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/$1.png"
-            echo "знято: $1"
+            local name="$1"; shift
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+            xcrun simctl launch "$UDID" "$BUNDLE_ID" "$@" >/dev/null
+            sleep 5
+            xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/$name.png"
+            echo "знято: $name"
           }
 
           xcrun simctl ui "$UDID" appearance dark
-          xcrun simctl launch "$UDID" "$BUNDLE_ID"
-          shoot 01-notes-dark 8
+          # Перший запуск довший: застосунок засіває сховище.
+          xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
+          sleep 8
+
+          shoot 01-notes-dark      -uiPane 0
+          shoot 02-folders-dark    -uiPane 1
+          shoot 03-settings-dark   -uiPane 2
+          shoot 04-editor-dark     -uiOpenNote
 
           xcrun simctl ui "$UDID" appearance light
-          shoot 02-notes-light 3
+          shoot 05-notes-light     -uiPane 0
+          shoot 06-settings-light  -uiPane 2
 
           xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
           xcrun simctl shutdown "$UDID" || true

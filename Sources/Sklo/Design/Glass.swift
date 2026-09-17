@@ -15,19 +15,25 @@ enum GlassTier {
     case thick
 
     fileprivate func fill(_ scheme: ColorScheme, _ k: Double) -> [Color] {
+        // У світлій темі скло не «підсвічує» тло, а згущує його до білого,
+        // інакше матеріал читається як брудна пляма. Значення для обох тем
+        // різні не на множник, а по суті — тому й задані окремо.
         let top: Double
         let bottom: Double
-        switch self {
-        case .thin: (top, bottom) = (0.155, 0.050)
-        case .regular: (top, bottom) = (0.190, 0.060)
-        case .thick: (top, bottom) = (0.190, 0.055)
-        }
         if scheme == .dark {
-            return [.white.opacity(min(1, top * k)), .white.opacity(min(1, bottom * k))]
+            switch self {
+            case .thin: (top, bottom) = (0.155, 0.050)
+            case .regular: (top, bottom) = (0.190, 0.060)
+            case .thick: (top, bottom) = (0.190, 0.055)
+            }
+        } else {
+            switch self {
+            case .thin: (top, bottom) = (0.78, 0.46)
+            case .regular: (top, bottom) = (0.85, 0.52)
+            case .thick: (top, bottom) = (0.86, 0.55)
+            }
         }
-        // У світлій темі скло не «підсвічує» тло, а згущує його до білого,
-        // інакше матеріал читається як брудна пляма.
-        return [.white.opacity(min(1, (0.78 + top) * k)), .white.opacity(min(1, (0.44 + bottom) * k))]
+        return [.white.opacity(min(1, top * k)), .white.opacity(min(1, bottom * k))]
     }
 
     fileprivate func stroke(_ scheme: ColorScheme) -> [Color] {
