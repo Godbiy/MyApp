@@ -392,18 +392,21 @@ a { color: var(--accent); }
 .todo-x { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--text-3); flex-shrink: 0; transition: transform .14s var(--ease); }
 .todo-x:active { transform: scale(.85); }
 
-.edock-bar { flex: 1; display: flex; align-items: center; height: 58px; padding: 0 6px; border-radius: 29px; }
-.edock-btn { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--text-2); transition: transform .16s var(--ease); }
-.edock-btn:active { transform: scale(.88); }
+.edock-bar { flex: 1; display: flex; align-items: center; height: 62px; padding: 0 8px; border-radius: 31px; }
+.edock-btn { flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 23px; color: var(--text-2); transition: transform .18s var(--ease); }
+.edock-btn:active { transform: scale(.86); }
+/* Та сама геометрія, що й «+» у списку: текстова кнопка на вузькому екрані
+   змагалась за ширину з рештою панелі й не влазила. */
 .done-btn {
-  height: 58px; padding: 0 22px; flex-shrink: 0; display: flex; align-items: center; border-radius: 29px;
-  font-size: 15.5px; font-weight: 700; color: #fff;
+  width: 62px; height: 62px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 31px; color: #fff;
   background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #000));
   border: 1px solid rgba(255,255,255,0.34);
   box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.55), 0 16px 40px var(--shadow-strong);
-  transition: transform .16s var(--ease);
+  transition: transform .18s cubic-bezier(.34,1.5,.4,1);
 }
-.done-btn:active { transform: scale(.94); }
+.done-btn:active { transform: scale(.9); }
 
 /* ── Теки ─────────────────────────────────────────────────────────────── */
 .sect { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); padding: 0 4px; }
@@ -688,6 +691,7 @@ const ICONS = {
   share: ic('<path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5"/>', 19),
   trash: ic('<path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/>', 19),
   check: ic('<path d="M5 12.5l4.5 4.5L19 7"/>', 14),
+  done: '<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
   checklist: ic('<path d="M3.5 6.5l1.8 1.8 3-3.4M3.5 13l1.8 1.8 3-3.4M3.5 19.5l1.8 1.8 3-3.4M11.5 6h9M11.5 12.5h9M11.5 19h9"/>', 19),
   minus: ic('<circle cx="12" cy="12" r="9"/><path d="M8.5 12h7"/>', 17),
   chevron: ic('<path d="M9 5l7 7-7 7"/>', 15),
@@ -1231,7 +1235,7 @@ function openNote(id) {
         '<button class="edock-btn" id="add-item" aria-label="Пункт списку">' + ICONS.checklist + "</button>" +
         '<button class="edock-btn" id="del" aria-label="Видалити">' + ICONS.trash + "</button>" +
       "</div>" +
-      '<button class="done-btn" id="done">Готово</button>' +
+      '<button class="done-btn" id="done" aria-label="Готово">' + ICONS.done + "</button>" +
     "</div>";
   app.appendChild(ed);
 
