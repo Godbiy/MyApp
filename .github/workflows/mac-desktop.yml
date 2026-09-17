@@ -89,6 +89,15 @@ jobs:
           fi
           # Застарілий протокол VNC тримає рівно 8 символів пароля.
           PW=$(printf '%.8s' "$VNC_PASSWORD")
+
+          # macOS оголошує власну схему автентифікації поруч зі старою VNC, і
+          # клієнт обирає саме її — а вона питає обліковий запис системи, якому
+          # тут пароля ніхто не ставив. Тому ставимо його явно: інакше вікно
+          # входу питає те, чого не існує.
+          sudo dscl . -passwd /Users/runner "$PW" 2>/dev/null \
+            && echo "пароль облікового запису runner виставлено" \
+            || echo "::warning::не вдалося виставити пароль облікового запису"
+
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
             -activate -configure -access -on \
             -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "$PW" \
@@ -148,12 +157,28 @@ jobs:
             echo ""
             echo "### [$URL/vnc.html?autoconnect=true&resize=scale]($URL/vnc.html?autoconnect=true&resize=scale)"
             echo ""
-            echo "Пароль — той, що ми домовились (секрет \`VNC_PASSWORD\`)."
+            echo "Користувач: **runner**, пароль — секрет \`VNC_PASSWORD\`."
             echo ""
             echo "Сеанс живе ${{ inputs.minutes }} хв. Щоб обірвати раніше — зупини цю збірку."
           } >> "$GITHUB_STEP_SUMMARY"
 
           echo "::notice title=Відкрий це::$URL/vnc.html?autoconnect=true&resize=scale"
+
+          # Журнал працюючої збірки GitHub через API не віддає, а артефакт —
+          # віддає одразу після викладення. Це єдиний спосіб дістати адресу,
+          # не відкриваючи сторінку очима.
+          mkdir -p "$RUNNER_TEMP/link"
+          {
+            echo "$URL/vnc.html?autoconnect=true&resize=scale"
+            echo "користувач: runner"
+          } > "$RUNNER_TEMP/link/desktop-url.txt"
+
+      - name: Publish the address
+        uses: actions/upload-artifact@v5
+        with:
+          name: desktop-url
+          path: ${{ runner.temp }}/link/desktop-url.txt
+          if-no-files-found: error
 
       - name: Hold the session open
         run: |
