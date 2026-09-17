@@ -10,6 +10,7 @@
 | `project.yml` | Опис Xcode-проєкту для [XcodeGen](https://github.com/yonaskolb/XcodeGen). Сам `.xcodeproj` у git **не** лежить — генерується в CI. |
 | `Sources/Sklo/` | Код застосунку + `Info.plist` + асети. |
 | `design/` | Джерела дизайн-полотна (`*.dc.html`). Звідти взяті числа скла. |
+| `docs/index.html` | Веб-версія одним файлом — те саме, але в браузері. |
 | `.github/workflows/ios.yml` | Збірка: перевірка під симулятор → unsigned archive під пристрій → пакування `.ipa`. |
 
 **Повна інструкція — [docs/GUIDE.md](docs/GUIDE.md).** Нижче стисла версія.
@@ -61,6 +62,15 @@ gh run download --name Sklo-unsigned-ipa
 Коли захочеться TestFlight — потрібен платний Apple Developer Program ($99/рік),
 сертифікат + provisioning profile + App Store Connect API key у GitHub Secrets,
 і крок `exportArchive` замість ручного пакування.
+
+## Веб-версія
+
+`docs/index.html` — той самий записник одним самодостатнім файлом: ні збірки,
+ні залежностей, ні мережі. Дані лежать у `localStorage` браузера й нікуди не
+йдуть. Відкривається будь-де, зокрема на Android, і ставиться на головний
+екран як застосунок.
+
+Живе за адресою <https://godbiy.github.io/MyApp/>.
 
 ## Розробка
 

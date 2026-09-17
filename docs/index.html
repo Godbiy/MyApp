@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07070d">
+<meta name="description" content="Записник у стилі Liquid Glass. Працює офлайн, дані лишаються на пристрої.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Скло · Записник</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Скло","short_name":"Скло","start_url":".","display":"standalone","background_color":"%2307070d","theme_color":"%2307070d","icons":[{"src":"data:image/svg%2Bxml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%3E%3Crect width=%27192%27 height=%27192%27 rx=%2742%27 fill=%27%237C5CFF%27/%3E%3Crect x=%2748%27 y=%2754%27 width=%2796%27 height=%2712%27 rx=%276%27 fill=%27white%27/%3E%3Crect x=%2748%27 y=%2790%27 width=%2796%27 height=%2712%27 rx=%276%27 fill=%27white%27 opacity=%27.75%27/%3E%3Crect x=%2748%27 y=%27126%27 width=%2760%27 height=%2712%27 rx=%276%27 fill=%27white%27 opacity=%27.5%27/%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
+
+<style>
+/* ── Токени ──────────────────────────────────────────────────────────────
+   Світла тема визначена на :root, темна перевизначає тільки те, що справді
+   міняється. Ручний вибір ставить data-theme і б'є системний. */
+:root {
+  --ink: #14121c;
+  --paper: #f4f1fa;
+  --text: #14121c;
+  --text-2: rgba(20,18,28,0.62);
+  --text-3: rgba(20,18,28,0.45);
+
+  --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.46));
+  --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(255,255,255,0.52));
+  --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,255,255,0.55));
+  --stroke-thin: rgba(255,255,255,0.88);
+  --stroke-reg: rgba(255,255,255,0.92);
+  --hi: rgba(255,255,255,1);
+  --hi-2: rgba(255,255,255,0.6);
+  --shadow: rgba(40,28,80,0.14);
+  --shadow-strong: rgba(40,28,80,0.18);
+  --dock-active: rgba(20,18,28,0.08);
+  --chip-on-bg: rgba(30,22,60,0.92);
+  --chip-on-text: #fff;
+  --field: rgba(20,18,28,0.06);
+  --grain: 0;
+
+  --violet: #7C5CFF;
+  --teal: #20D0C0;
+  --pink: #FF4D8D;
+  --amber: #FFB020;
+
+  --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", "Noto Serif", Georgia, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #07070d;
+    --paper: #07070d;
+    --text: #ffffff;
+    --text-2: rgba(255,255,255,0.64);
+    --text-3: rgba(255,255,255,0.46);
+
+    --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05));
+    --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06));
+    --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055));
+    --stroke-thin: rgba(255,255,255,0.16);
+    --stroke-reg: rgba(255,255,255,0.20);
+    --hi: rgba(255,255,255,0.45);
+    --hi-2: rgba(255,255,255,0.07);
+    --shadow: rgba(0,0,0,0.34);
+    --shadow-strong: rgba(0,0,0,0.45);
+    --dock-active: rgba(255,255,255,0.14);
+    --chip-on-bg: rgba(255,255,255,0.82);
+    --chip-on-text: #0d0d14;
+    --field: rgba(255,255,255,0.09);
+    --grain: 0.35;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #07070d;
+  --paper: #07070d;
+  --text: #ffffff;
+  --text-2: rgba(255,255,255,0.64);
+  --text-3: rgba(255,255,255,0.46);
+
+  --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05));
+  --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06));
+  --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055));
+  --stroke-thin: rgba(255,255,255,0.16);
+  --stroke-reg: rgba(255,255,255,0.20);
+  --hi: rgba(255,255,255,0.45);
+  --hi-2: rgba(255,255,255,0.07);
+  --shadow: rgba(0,0,0,0.34);
+  --shadow-strong: rgba(0,0,0,0.45);
+  --dock-active: rgba(255,255,255,0.14);
+  --chip-on-bg: rgba(255,255,255,0.82);
+  --chip-on-text: #0d0d14;
+  --field: rgba(255,255,255,0.09);
+  --grain: 0.35;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button, input, textarea { font: inherit; color: inherit; touch-action: manipulation; }
+button { border: 0; background: none; padding: 0; cursor: pointer; }
+a { color: var(--violet); }
+a:hover { color: var(--pink); }
+
+/* ── Тло, яке скло заломлює ───────────────────────────────────────────── */
+#bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--paper); }
+#bg .bloom { position: absolute; border-radius: 50%; filter: blur(40px); }
+#bg .b1 { background: radial-gradient(closest-side, var(--violet), transparent); width: 115vw; height: 60vh; left: -40vw; top: -18vh; opacity: .52; }
+#bg .b2 { background: radial-gradient(closest-side, var(--teal), transparent); width: 100vw; height: 48vh; right: -42vw; top: 6vh; opacity: .36; }
+#bg .b3 { background: radial-gradient(closest-side, var(--pink), transparent); width: 105vw; height: 50vh; right: -34vw; bottom: -16vh; opacity: .38; }
+#bg .b4 { background: radial-gradient(closest-side, var(--amber), transparent); width: 90vw; height: 42vh; left: -40vw; bottom: -8vh; opacity: .26; }
+#grain {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  opacity: var(--grain);
+  background-image: radial-gradient(rgba(255,255,255,0.14) 0.5px, transparent 0.5px);
+  background-size: 3px 3px;
+}
+
+/* ── Скло ─────────────────────────────────────────────────────────────── */
+.g {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--stroke-thin);
+  background: var(--glass-thin);
+  box-shadow: inset 0 1px 0 var(--hi), 0 12px 32px var(--shadow);
+}
+.g-reg {
+  background: var(--glass-reg);
+  border-color: var(--stroke-reg);
+  box-shadow: inset 0 1px 0 var(--hi), 0 12px 32px var(--shadow);
+}
+.g-thick {
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  background: var(--glass-thick);
+  border-color: var(--stroke-reg);
+  box-shadow: inset 0 1.5px 0 var(--hi), inset 0 -1px 0 var(--hi-2), 0 16px 40px var(--shadow-strong);
+}
+
+/* ── Каркас ───────────────────────────────────────────────────────────── */
+#app {
+  position: relative; z-index: 2;
+  height: 100%;
+  width: 100%;
+  /* На телефоні це повна ширина. На ноуті колонка не розтягується через увесь
+     екран — картка на 1500 px завширшки не читається. */
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+}
+.screen { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.hidden { display: none !important; }
+
+.head { display: flex; align-items: flex-end; gap: 12px; padding: 12px 20px 0; flex-shrink: 0; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); }
+.h1 { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin: 2px 0 0; }
+
+.icon-btn {
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 22px;
+}
+
+.searchwrap { padding: 16px 20px 0; flex-shrink: 0; }
+.search { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; border-radius: 23px; }
+.search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 16px; font-weight: 500; }
+.search input::placeholder { color: var(--text-3); }
+
+.chips { display: flex; gap: 8px; padding: 14px 20px 2px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  display: flex; align-items: center; height: 38px; padding: 0 17px; border-radius: 19px;
+  font-size: 14px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap;
+  color: var(--text-2);
+  transition: background .18s, color .18s, border-color .18s;
+}
+.chip.on { background: var(--chip-on-bg); color: var(--chip-on-text); border-color: var(--stroke-reg); }
+
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+.list { display: flex; flex-direction: column; gap: 11px; padding: 16px 20px calc(150px + env(safe-area-inset-bottom)); }
+
+.card { display: flex; flex-direction: column; gap: 6px; padding: 15px 16px 14px; border-radius: 23px; text-align: left; width: 100%; }
+.card.pin { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: var(--glass-reg); }
+.card-top { display: flex; align-items: center; gap: 8px; }
+.card-title { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 700; letter-spacing: -.012em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-time { font-size: 12px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+.card-prev { font-family: var(--serif); font-size: 13.5px; line-height: 1.5; color: var(--text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-foot { display: flex; align-items: center; gap: 7px; padding-top: 2px; }
+.dot { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); flex-shrink: 0; }
+.card-folder { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--text-3); }
+
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 44px 120px; text-align: center; }
+.empty h2 { font-size: 17px; font-weight: 800; margin: 0; }
+.empty p { font-family: var(--serif); font-size: 14px; line-height: 1.55; color: var(--text-2); margin: 0; }
+
+/* ── Панель ───────────────────────────────────────────────────────────── */
+.dock {
+  position: absolute; left: 20px; right: 20px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 10px; z-index: 5;
+}
+.dock-bar { flex: 1; display: flex; align-items: center; height: 62px; padding: 0 8px; border-radius: 31px; }
+.dock-btn { flex: 1; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 23px; color: var(--text-3); }
+.dock-btn.on { background: var(--dock-active); color: var(--text); box-shadow: inset 0 1px 0 var(--hi-2); }
+.fab {
+  width: 62px; height: 62px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 31px; color: #fff;
+  background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #000));
+  border: 1px solid rgba(255,255,255,0.34);
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.55), 0 16px 40px var(--shadow-strong);
+}
+.fab:active, .dock-btn:active, .icon-btn:active, .chip:active, .card:active { transform: scale(.97); }
+.card, .chip, .fab, .dock-btn, .icon-btn { transition: transform .12s ease; }
+
+/* ── Редактор ─────────────────────────────────────────────────────────── */
+.nav { display: flex; align-items: center; gap: 8px; padding: 12px 20px 0; flex-shrink: 0; }
+.back { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 10px; border-radius: 22px; font-size: 15px; font-weight: 700; }
+.paper { margin: 20px 20px calc(150px + env(safe-area-inset-bottom)); padding: 24px 22px 26px; border-radius: 30px; }
+.stamp { font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.paper textarea {
+  display: block; width: 100%; border: 0; background: none; outline: none; resize: none;
+  overflow: hidden; padding: 0; margin: 0;
+}
+#e-title { font-size: 26px; font-weight: 800; letter-spacing: -.028em; line-height: 1.18; margin-bottom: 14px; }
+#e-body { font-family: var(--serif); font-size: 16px; line-height: 1.72; color: var(--text); opacity: .88; }
+.paper textarea::placeholder { color: var(--text-3); opacity: 1; }
+
+.todos { display: flex; flex-direction: column; gap: 11px; margin-top: 20px; }
+.todo { display: flex; align-items: flex-start; gap: 11px; }
+.box {
+  width: 24px; height: 24px; flex-shrink: 0; margin-top: 1px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--field); border: 1px solid var(--stroke-reg);
+}
+.todo.done .box { background: var(--accent); border-color: rgba(255,255,255,0.4); }
+.box svg { opacity: 0; }
+.todo.done .box svg { opacity: 1; }
+.todo input {
+  flex: 1; min-width: 0; border: 0; background: none; outline: none;
+  font-family: var(--serif); font-size: 15px; line-height: 1.5; padding: 2px 0;
+}
+.todo.done input { color: var(--text-3); text-decoration: line-through; }
+.todo-x { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--text-3); flex-shrink: 0; }
+
+.edock-bar { flex: 1; display: flex; align-items: center; height: 58px; padding: 0 6px; border-radius: 29px; }
+.edock-btn { flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--text-2); }
+.done-btn {
+  height: 58px; padding: 0 22px; flex-shrink: 0;
+  display: flex; align-items: center; border-radius: 29px;
+  font-size: 15.5px; font-weight: 700; color: #fff;
+  background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #000));
+  border: 1px solid rgba(255,255,255,0.34);
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.55), 0 16px 40px var(--shadow-strong);
+}
+
+/* ── Теки ─────────────────────────────────────────────────────────────── */
+.sect { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); padding: 0 4px 11px; }
+.frow { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 20px; width: 100%; text-align: left; }
+.fic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); }
+.fmeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fname { font-size: 16px; font-weight: 700; letter-spacing: -.012em; }
+.flast { font-family: var(--serif); font-size: 12.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fcount { font-size: 13.5px; font-weight: 700; color: var(--text-3); flex-shrink: 0; }
+
+/* ── Аркуш дій ────────────────────────────────────────────────────────── */
+#sheet { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+#sheet-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#sheet-card {
+  position: relative; width: 100%; max-width: 460px;
+  margin: 0 12px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 28px; padding: 22px 20px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: rise .22s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes rise { from { transform: translateY(16px); opacity: 0; } }
+#sheet h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+#sheet p { margin: -4px 0 0; font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--text-2); }
+#sheet input[type=text] {
+  height: 48px; border-radius: 16px; padding: 0 14px; width: 100%;
+  border: 1px solid var(--stroke-reg); background: var(--field); outline: none; font-size: 16px;
+}
+.swatches { display: flex; gap: 10px; }
+.swatch { width: 40px; height: 40px; border-radius: 14px; border: 2px solid transparent; }
+.swatch.on { border-color: var(--text); }
+.sheet-acts { display: flex; gap: 10px; margin-top: 4px; }
+.sheet-acts button { flex: 1; height: 48px; border-radius: 18px; font-size: 15.5px; font-weight: 700; }
+.btn-ghost { background: var(--field); border: 1px solid var(--stroke-reg); }
+.btn-solid { color: #fff; background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 62%, #000)); }
+.btn-danger { color: #fff; background: linear-gradient(150deg, #FF4D6D, #C31F41); }
+
+#toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(104px + env(safe-area-inset-bottom)); z-index: 60;
+  padding: 12px 20px; border-radius: 22px; font-size: 14.5px; font-weight: 600;
+  pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+#toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="bg">
+  <div class="bloom b1"></div><div class="bloom b2"></div>
+  <div class="bloom b3"></div><div class="bloom b4"></div>
+</div>
+<div id="grain"></div>
+
+<div id="app"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ══════════════ Дані ══════════════════════════════════════════════════
+   Усе живе в localStorage одним записом. Нічого нікуди не надсилається —
+   закрив вкладку, дані лишились у браузері. */
+
+const KEY = "sklo.v1";
+const ACCENTS = ["violet", "teal", "pink", "amber"];
+const ACCENT_HEX = { violet: "#7C5CFF", teal: "#20D0C0", pink: "#FF4D8D", amber: "#FFB020" };
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+let db = { notes: [], folders: [] };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.notes) && Array.isArray(parsed.folders)) {
+        db = parsed;
+        if (!db.folders.length) db.folders = defaultFolders();
+        return;
+      }
+    }
+  } catch (e) { /* зіпсований або недоступний сховок — починаємо з нуля */ }
+  seed();
+}
+
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(db));
+  } catch (e) {
+    toast("Не вдалось зберегти — сховище браузера недоступне");
+  }
+}
+
+function defaultFolders() {
+  return [
+    { id: uid(), name: "Ідеї", accent: "violet" },
+    { id: uid(), name: "Робота", accent: "teal" },
+    { id: uid(), name: "Побут", accent: "amber" },
+    { id: uid(), name: "Особисте", accent: "pink" },
+  ];
+}
+
+function seed() {
+  const folders = defaultFolders();
+  db = {
+    folders,
+    notes: [{
+      id: uid(),
+      title: "Вітаю у Склі",
+      body: "Це звичайна нотатка — гортай, правь, видаляй.\n\nТапни «+» унизу, щоб написати свою. Шпилька зверху закріплює нотатку над рештою, теки фільтрують список.",
+      folderID: folders[0].id,
+      pinned: true,
+      created: Date.now(),
+      updated: Date.now(),
+      items: [
+        { id: uid(), text: "Написати першу нотатку", done: false },
+        { id: uid(), text: "Спробувати теки", done: false },
+        { id: uid(), text: "Закріпити щось важливе", done: false },
+      ],
+    }],
+  };
+  save();
+}
+
+const noteById = (id) => db.notes.find((n) => n.id === id);
+const folderById = (id) => db.folders.find((f) => f.id === id) || null;
+const accentOf = (note) => {
+  const f = folderById(note && note.folderID);
+  return ACCENT_HEX[f ? f.accent : "violet"];
+};
+
+function displayTitle(n) {
+  const t = (n.title || "").trim();
+  if (t) return t;
+  const first = (n.body || "").split("\n").map((s) => s.trim()).filter(Boolean)[0];
+  return first || "Без назви";
+}
+
+function preview(n) {
+  const b = (n.body || "").trim();
+  if (b) return b.replace(/\s*\n+\s*/g, " ");
+  const items = (n.items || []).map((i) => i.text).filter(Boolean);
+  return items.length ? items.join(" · ") : "Порожня нотатка";
+}
+
+function isEmptyNote(n) {
+  return !(n.title || "").trim() && !(n.body || "").trim()
+    && !(n.items || []).some((i) => (i.text || "").trim());
+}
+
+function matches(n, q) {
+  q = q.trim().toLowerCase();
+  if (!q) return true;
+  if ((n.title || "").toLowerCase().includes(q)) return true;
+  if ((n.body || "").toLowerCase().includes(q)) return true;
+  return (n.items || []).some((i) => (i.text || "").toLowerCase().includes(q));
+}
+
+/* ══════════════ Дати ══════════════════════════════════════════════════ */
+
+const MONTHS_GEN = ["січня","лютого","березня","квітня","травня","червня",
+                    "липня","серпня","вересня","жовтня","листопада","грудня"];
+const MONTHS_SHORT = ["січ","лют","бер","кві","тра","чер","лип","сер","вер","жов","лис","гру"];
+const WEEKDAYS = ["Неділя","Понеділок","Вівторок","Середа","Четвер","Пʼятниця","Субота"];
+
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear()
+  && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+function hhmm(d) {
+  return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+
+function shortStamp(ts) {
+  const d = new Date(ts), now = new Date();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  if (sameDay(d, now)) return hhmm(d);
+  if (sameDay(d, yest)) return "Учора";
+  if (d.getFullYear() === now.getFullYear()) return d.getDate() + " " + MONTHS_SHORT[d.getMonth()];
+  return String(d.getDate()).padStart(2, "0") + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getFullYear()).slice(2);
+}
+
+function fullStamp(ts) {
+  const d = new Date(ts), now = new Date();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  if (sameDay(d, now)) return "Сьогодні · " + hhmm(d);
+  if (sameDay(d, yest)) return "Учора · " + hhmm(d);
+  return d.getDate() + " " + MONTHS_GEN[d.getMonth()] + " · " + hhmm(d);
+}
+
+function weekdayLine() {
+  const d = new Date();
+  return WEEKDAYS[d.getDay()] + ", " + d.getDate() + " " + MONTHS_GEN[d.getMonth()];
+}
+
+/** Місцевий відмінок: «у 1 нотатці», але «у 2 / 11 / 25 нотатках». */
+function declension(n) {
+  return (n % 10 === 1 && n % 100 !== 11) ? "нотатці" : "нотатках";
+}
+function declensionNom(n) {
+  const m100 = n % 100, m10 = n % 10;
+  if (m100 >= 11 && m100 <= 14) return "нотаток";
+  if (m10 === 1) return "нотатка";
+  if (m10 >= 2 && m10 <= 4) return "нотатки";
+  return "нотаток";
+}
+
+/* ══════════════ Іконки ════════════════════════════════════════════════ */
+
+const ic = (paths, size) => '<svg width="' + (size || 21) + '" height="' + (size || 21) +
+  '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+  'stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>";
+
+const ICONS = {
+  list: ic('<path d="M4 6h16M4 12h16M4 18h10"/>'),
+  folder: ic('<path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'),
+  search: ic('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  plus: ic('<path d="M12 5v14M5 12h14"/>', 26),
+  plusSm: ic('<path d="M12 5v14M5 12h14"/>', 20),
+  back: ic('<path d="M15 5l-7 7 7 7"/>', 20),
+  share: ic('<path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5"/>', 19),
+  trash: ic('<path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/>', 19),
+  check: ic('<path d="M5 12.5l4.5 4.5L19 7"/>', 14),
+  checklist: ic('<path d="M3.5 6.5l1.8 1.8 3-3.4M3.5 13l1.8 1.8 3-3.4M3.5 19.5l1.8 1.8 3-3.4M11.5 6h9M11.5 12.5h9M11.5 19h9"/>', 19),
+  minus: ic('<circle cx="12" cy="12" r="9"/><path d="M8.5 12h7"/>', 17),
+  chevron: ic('<path d="M9 5l7 7-7 7"/>', 15),
+  theme: ic('<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>', 19),
+  dots: ic('<circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/><circle cx="5" cy="12" r="1.3" fill="currentColor"/>', 20),
+  pin: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"/></svg>',
+  pinFill: '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"/></svg>',
+  pinTiny: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2l8 8-3.2 1.1-3.1 6.4-2.6-2.6-5.6 5.6-1.4-1.4 5.6-5.6-2.6-2.6 6.4-3.1z"/></svg>',
+  emptyBox: ic('<rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke-dasharray="3 3"/>', 34),
+};
+
+/* ══════════════ Стан екрана ═══════════════════════════════════════════ */
+
+const ui = { view: "list", tab: "notes", noteID: null, folderID: null, query: "" };
+const app = document.getElementById("app");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "g g-thick on";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = "g g-thick"; }, 2200);
+}
+
+function setAccentVar(hex) {
+  document.documentElement.style.setProperty("--accent", hex);
+}
+
+function render() {
+  if (ui.view === "editor") renderEditor();
+  else if (ui.tab === "folders") renderFolders();
+  else renderList();
+}
+
+/* ── Список ───────────────────────────────────────────────────────────── */
+
+function renderList() {
+  const folder = folderById(ui.folderID);
+  setAccentVar(folder ? ACCENT_HEX[folder.accent] : ACCENT_HEX.violet);
+
+  const notes = db.notes
+    .filter((n) => !ui.folderID || n.folderID === ui.folderID)
+    .filter((n) => matches(n, ui.query))
+    .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated - a.updated);
+
+  const total = db.notes.length;
+
+  const chips = [{ id: null, name: "Усі" }].concat(db.folders)
+    .map((f) => '<button class="chip g' + (ui.folderID === f.id ? " on" : "") +
+      '" data-folder="' + (f.id || "") + '">' + esc(f.name) + "</button>").join("");
+
+  const cards = notes.map((n) => {
+    const f = folderById(n.folderID);
+    return '<button class="card g' + (n.pinned ? " pin" : "") + '" data-open="' + n.id +
+      '" style="--accent:' + accentOf(n) + '">' +
+      '<span class="card-top">' +
+        (n.pinned ? '<span style="color:' + accentOf(n) + ';display:flex">' + ICONS.pinTiny + "</span>" : "") +
+        '<span class="card-title">' + esc(displayTitle(n)) + "</span>" +
+        '<span class="card-time">' + shortStamp(n.updated) + "</span>" +
+      "</span>" +
+      '<span class="card-prev">' + esc(preview(n)) + "</span>" +
+      (f ? '<span class="card-foot"><span class="dot"></span><span class="card-folder">' + esc(f.name) + "</span></span>" : "") +
+    "</button>";
+  }).join("");
+
+  const body = notes.length
+    ? '<div class="scroll"><div class="list">' + cards + "</div></div>"
+    : '<div class="empty">' +
+        '<span style="color:var(--text-3)">' + (ui.query ? ICONS.search : ICONS.emptyBox) + "</span>" +
+        "<h2>" + (ui.query ? "Нічого не знайшлось" : "Тут поки порожньо") + "</h2>" +
+        "<p>" + (ui.query
+          ? "Спробуй інші слова або скинь фільтр теки."
+          : "Тапни «+», щоб написати першу нотатку.") + "</p>" +
+      "</div>";
+
+  app.innerHTML =
+    '<div class="screen">' +
+      '<div class="head">' +
+        "<div style=\"flex:1;min-width:0\">" +
+          '<div class="eyebrow">' + esc(weekdayLine()) + "</div>" +
+          '<h1 class="h1">Нотатки</h1>' +
+        "</div>" +
+        '<button class="icon-btn g g-reg" id="theme-btn" aria-label="Тема">' + ICONS.theme + "</button>" +
+      "</div>" +
+      '<div class="searchwrap"><div class="search g g-reg">' + ICONS.search +
+        '<input id="q" type="search" placeholder="Пошук у ' + total + " " + declension(total) +
+        '" value="' + esc(ui.query) + '"></div></div>' +
+      '<div class="chips">' + chips + "</div>" +
+      body +
+      dockHTML("notes") +
+    "</div>";
+
+  const q = document.getElementById("q");
+  q.addEventListener("input", () => {
+    ui.query = q.value;
+    const keep = document.activeElement === q;
+    renderList();
+    if (keep) {
+      const nq = document.getElementById("q");
+      nq.focus();
+      nq.setSelectionRange(nq.value.length, nq.value.length);
+    }
+  });
+
+  document.getElementById("theme-btn").onclick = cycleTheme;
+  app.querySelectorAll("[data-folder]").forEach((el) => {
+    el.onclick = () => { ui.folderID = el.dataset.folder || null; renderList(); };
+  });
+  app.querySelectorAll("[data-open]").forEach((el) => {
+    el.onclick = () => openNote(el.dataset.open);
+    attachLongPress(el, () => noteActions(el.dataset.open));
+  });
+  wireDock();
+}
+
+/* ── Теки ─────────────────────────────────────────────────────────────── */
+
+function renderFolders() {
+  setAccentVar(ACCENT_HEX.violet);
+  const total = db.notes.length;
+
+  const rows = db.folders.map((f) => {
+    const count = db.notes.filter((n) => n.folderID === f.id).length;
+    const last = db.notes.filter((n) => n.folderID === f.id)
+      .sort((a, b) => b.updated - a.updated)[0];
+    return '<button class="frow g" data-pick="' + f.id + '" style="--accent:' + ACCENT_HEX[f.accent] + '">' +
+      '<span class="fic">' + ICONS.folder + "</span>" +
+      '<span class="fmeta"><span class="fname">' + esc(f.name) + "</span>" +
+      '<span class="flast">' + esc(last ? displayTitle(last) : "Порожня тека") + "</span></span>" +
+      '<span class="fcount">' + count + "</span>" +
+      '<span style="color:var(--text-3);display:flex">' + ICONS.chevron + "</span>" +
+    "</button>";
+  }).join("");
+
+  app.innerHTML =
+    '<div class="screen">' +
+      '<div class="head">' +
+        "<div style=\"flex:1;min-width:0\">" +
+          '<div class="eyebrow">' + total + " " + declensionNom(total) + "</div>" +
+          '<h1 class="h1">Теки</h1>' +
+        "</div>" +
+        '<button class="icon-btn g g-reg" id="add-folder" aria-label="Нова тека">' + ICONS.plusSm + "</button>" +
+      "</div>" +
+      '<div class="scroll"><div class="list">' +
+        '<div class="sect">Мої теки</div>' +
+        (rows || '<p style="font-family:var(--serif);color:var(--text-2);padding:0 4px">Тек поки немає. Створи першу кнопкою «+».</p>') +
+      "</div></div>" +
+      dockHTML("folders") +
+    "</div>";
+
+  document.getElementById("add-folder").onclick = newFolder;
+  app.querySelectorAll("[data-pick]").forEach((el) => {
+    el.onclick = () => { ui.folderID = el.dataset.pick; ui.tab = "notes"; render(); };
+    attachLongPress(el, () => folderActions(el.dataset.pick));
+  });
+  wireDock();
+}
+
+/* ── Панель ───────────────────────────────────────────────────────────── */
+
+function dockHTML(active) {
+  return '<div class="dock">' +
+    '<div class="dock-bar g g-thick">' +
+      '<button class="dock-btn' + (active === "notes" ? " on" : "") + '" data-tab="notes" aria-label="Нотатки">' + ICONS.list + "</button>" +
+      '<button class="dock-btn' + (active === "folders" ? " on" : "") + '" data-tab="folders" aria-label="Теки">' + ICONS.folder + "</button>" +
+      '<button class="dock-btn" data-tab="search" aria-label="Пошук">' + ICONS.search + "</button>" +
+    "</div>" +
+    '<button class="fab" id="fab" aria-label="Нова нотатка">' + ICONS.plus + "</button>" +
+  "</div>";
+}
+
+function wireDock() {
+  app.querySelectorAll("[data-tab]").forEach((el) => {
+    el.onclick = () => {
+      const t = el.dataset.tab;
+      if (t === "search") {
+        ui.tab = "notes";
+        render();
+        const q = document.getElementById("q");
+        if (q) q.focus();
+      } else {
+        ui.tab = t;
+        render();
+      }
+    };
+  });
+  document.getElementById("fab").onclick = () => {
+    const note = {
+      id: uid(), title: "", body: "", folderID: ui.folderID,
+      pinned: false, created: Date.now(), updated: Date.now(), items: [],
+    };
+    db.notes.push(note);
+    save();
+    openNote(note.id);
+  };
+}
+
+/* ── Редактор ─────────────────────────────────────────────────────────── */
+
+function openNote(id) {
+  ui.noteID = id;
+  ui.view = "editor";
+  renderEditor();
+}
+
+function closeEditor() {
+  const n = noteById(ui.noteID);
+  // Відкрив, нічого не написав, вийшов — не лишаємо сміття в списку.
+  if (n && isEmptyNote(n)) {
+    db.notes = db.notes.filter((x) => x.id !== n.id);
+    save();
+  }
+  ui.view = "list";
+  ui.noteID = null;
+  render();
+}
+
+function grow(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+function renderEditor() {
+  const n = noteById(ui.noteID);
+  if (!n) { closeEditor(); return; }
+  const f = folderById(n.folderID);
+  setAccentVar(accentOf(n));
+
+  app.innerHTML =
+    '<div class="screen">' +
+      '<div class="nav">' +
+        '<button class="back g g-reg" id="back">' + ICONS.back + "<span>" + esc(f ? f.name : "Нотатки") + "</span></button>" +
+        '<div style="flex:1"></div>' +
+        '<button class="icon-btn g g-reg" id="pin" aria-label="Закріпити" style="color:' +
+          (n.pinned ? accentOf(n) : "var(--text)") + '">' + (n.pinned ? ICONS.pinFill : ICONS.pin) + "</button>" +
+        '<button class="icon-btn g g-reg" id="share" aria-label="Поділитися">' + ICONS.share + "</button>" +
+      "</div>" +
+      '<div class="scroll"><div class="paper g g-reg">' +
+        '<div class="stamp">' + fullStamp(n.updated) + "</div>" +
+        '<textarea id="e-title" rows="1" placeholder="Заголовок"></textarea>' +
+        '<textarea id="e-body" rows="1" placeholder="Почни писати…"></textarea>' +
+        '<div class="todos" id="todos"></div>' +
+      "</div></div>" +
+      '<div class="dock">' +
+        '<div class="edock-bar g g-thick">' +
+          '<button class="edock-btn" id="add-item" aria-label="Пункт списку">' + ICONS.checklist + "</button>" +
+          '<button class="edock-btn" id="del" aria-label="Видалити">' + ICONS.trash + "</button>" +
+        "</div>" +
+        '<button class="done-btn" id="done">Готово</button>' +
+      "</div>" +
+    "</div>";
+
+  const title = document.getElementById("e-title");
+  const body = document.getElementById("e-body");
+  title.value = n.title || "";
+  body.value = n.body || "";
+  requestAnimationFrame(() => { grow(title); grow(body); });
+
+  // Поля пишуть у модель напряму — перемальовувати екран на кожну літеру
+  // не можна, бо зникне каретка.
+  const touch = () => { n.updated = Date.now(); save(); };
+  title.addEventListener("input", () => { n.title = title.value; grow(title); touch(); });
+  body.addEventListener("input", () => { n.body = body.value; grow(body); touch(); });
+
+  renderTodos(n);
+
+  document.getElementById("back").onclick = closeEditor;
+  document.getElementById("done").onclick = () => { document.activeElement.blur(); closeEditor(); };
+  document.getElementById("add-item").onclick = () => {
+    n.items.push({ id: uid(), text: "", done: false });
+    touch();
+    renderTodos(n);
+    const inputs = document.querySelectorAll("#todos input");
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  };
+  document.getElementById("del").onclick = () => confirmDelete(n.id);
+  document.getElementById("pin").onclick = () => { n.pinned = !n.pinned; touch(); renderEditor(); };
+  document.getElementById("share").onclick = () => shareNote(n);
+}
+
+function renderTodos(n) {
+  const host = document.getElementById("todos");
+  if (!host) return;
+  host.innerHTML = n.items.map((it) =>
+    '<div class="todo' + (it.done ? " done" : "") + '" data-item="' + it.id + '">' +
+      '<button class="box" data-toggle="' + it.id + '" aria-label="Готово">' + ICONS.check + "</button>" +
+      '<input type="text" value="' + esc(it.text) + '" placeholder="Пункт">' +
+      '<button class="todo-x" data-rm="' + it.id + '" aria-label="Прибрати">' + ICONS.minus + "</button>" +
+    "</div>").join("");
+
+  host.querySelectorAll("[data-toggle]").forEach((el) => {
+    el.onclick = () => {
+      const it = n.items.find((x) => x.id === el.dataset.toggle);
+      it.done = !it.done;
+      n.updated = Date.now(); save();
+      el.closest(".todo").classList.toggle("done", it.done);
+    };
+  });
+  host.querySelectorAll("[data-rm]").forEach((el) => {
+    el.onclick = () => {
+      n.items = n.items.filter((x) => x.id !== el.dataset.rm);
+      n.updated = Date.now(); save();
+      renderTodos(n);
+    };
+  });
+  host.querySelectorAll(".todo input").forEach((input) => {
+    const id = input.closest(".todo").dataset.item;
+    input.addEventListener("input", () => {
+      const it = n.items.find((x) => x.id === id);
+      it.text = input.value;
+      n.updated = Date.now(); save();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      n.items.push({ id: uid(), text: "", done: false });
+      save();
+      renderTodos(n);
+      const inputs = document.querySelectorAll("#todos input");
+      inputs[inputs.length - 1].focus();
+    });
+  });
+}
+
+function shareNote(n) {
+  const parts = [displayTitle(n)];
+  if ((n.body || "").trim()) parts.push(n.body.trim());
+  const items = n.items.filter((i) => i.text.trim()).map((i) => (i.done ? "☑ " : "☐ ") + i.text);
+  if (items.length) parts.push(items.join("\n"));
+  const text = parts.join("\n\n");
+
+  if (navigator.share) {
+    navigator.share({ title: displayTitle(n), text }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => toast("Скопійовано"))
+      .catch(() => toast("Не вдалось скопіювати"));
+  } else {
+    toast("Браузер не вміє ділитись");
+  }
+}
+
+/* ── Аркуш дій ────────────────────────────────────────────────────────── */
+
+function sheet(html, wire) {
+  const host = document.createElement("div");
+  host.id = "sheet";
+  host.innerHTML = '<div id="sheet-scrim"></div><div id="sheet-card" class="g g-thick">' + html + "</div>";
+  document.body.appendChild(host);
+  const close = () => host.remove();
+  host.querySelector("#sheet-scrim").onclick = close;
+  wire(host, close);
+  return close;
+}
+
+function noteActions(id) {
+  const n = noteById(id);
+  if (!n) return;
+  setAccentVar(accentOf(n));
+  sheet(
+    "<h3>" + esc(displayTitle(n)) + "</h3>" +
+    '<div class="sheet-acts" style="flex-direction:column">' +
+      '<button class="btn-ghost" id="a-pin">' + (n.pinned ? "Відкріпити" : "Закріпити") + "</button>" +
+      '<button class="btn-danger" id="a-del">Видалити</button>' +
+      '<button class="btn-ghost" id="a-cancel">Скасувати</button>' +
+    "</div>",
+    (host, close) => {
+      host.querySelector("#a-pin").onclick = () => {
+        n.pinned = !n.pinned; n.updated = Date.now(); save(); close(); render();
+      };
+      host.querySelector("#a-del").onclick = () => { close(); confirmDelete(id); };
+      host.querySelector("#a-cancel").onclick = close;
+    }
+  );
+}
+
+function confirmDelete(id) {
+  const n = noteById(id);
+  if (!n) return;
+  sheet(
+    "<h3>Видалити нотатку?</h3><p>«" + esc(displayTitle(n)) + "» зникне назавжди.</p>" +
+    '<div class="sheet-acts">' +
+      '<button class="btn-ghost" id="d-no">Скасувати</button>' +
+      '<button class="btn-danger" id="d-yes">Видалити</button>' +
+    "</div>",
+    (host, close) => {
+      host.querySelector("#d-no").onclick = close;
+      host.querySelector("#d-yes").onclick = () => {
+        db.notes = db.notes.filter((x) => x.id !== id);
+        save(); close();
+        ui.view = "list"; ui.noteID = null;
+        render();
+      };
+    }
+  );
+}
+
+function folderActions(id) {
+  const f = folderById(id);
+  if (!f) return;
+  setAccentVar(ACCENT_HEX[f.accent]);
+  const count = db.notes.filter((n) => n.folderID === id).length;
+  sheet(
+    "<h3>" + esc(f.name) + "</h3>" +
+    "<p>" + (count ? "Нотатки (" + count + ") лишаться, але без теки." : "Тека порожня.") + "</p>" +
+    '<div class="sheet-acts">' +
+      '<button class="btn-ghost" id="f-no">Скасувати</button>' +
+      '<button class="btn-danger" id="f-yes">Видалити теку</button>' +
+    "</div>",
+    (host, close) => {
+      host.querySelector("#f-no").onclick = close;
+      host.querySelector("#f-yes").onclick = () => {
+        db.folders = db.folders.filter((x) => x.id !== id);
+        db.notes.forEach((n) => { if (n.folderID === id) n.folderID = null; });
+        if (ui.folderID === id) ui.folderID = null;
+        save(); close(); render();
+      };
+    }
+  );
+}
+
+function newFolder() {
+  let accent = ACCENTS[Math.floor(Math.random() * ACCENTS.length)];
+  setAccentVar(ACCENT_HEX[accent]);
+  sheet(
+    "<h3>Нова тека</h3>" +
+    '<input type="text" id="f-name" placeholder="Назва" maxlength="40" autocomplete="off">' +
+    '<div class="swatches">' + ACCENTS.map((a) =>
+      '<button class="swatch' + (a === accent ? " on" : "") + '" data-acc="' + a +
+      '" style="background:' + ACCENT_HEX[a] + '" aria-label="' + a + '"></button>').join("") + "</div>" +
+    '<div class="sheet-acts">' +
+      '<button class="btn-ghost" id="n-no">Скасувати</button>' +
+      '<button class="btn-solid" id="n-yes">Створити</button>' +
+    "</div>",
+    (host, close) => {
+      const input = host.querySelector("#f-name");
+      setTimeout(() => input.focus(), 60);
+      host.querySelectorAll("[data-acc]").forEach((el) => {
+        el.onclick = () => {
+          accent = el.dataset.acc;
+          setAccentVar(ACCENT_HEX[accent]);
+          host.querySelectorAll("[data-acc]").forEach((x) => x.classList.toggle("on", x === el));
+        };
+      });
+      const commit = () => {
+        const name = input.value.trim();
+        if (!name) { input.focus(); return; }
+        db.folders.push({ id: uid(), name, accent });
+        save(); close(); render();
+      };
+      host.querySelector("#n-yes").onclick = commit;
+      host.querySelector("#n-no").onclick = close;
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") commit(); });
+    }
+  );
+}
+
+/* ── Довгий тап ───────────────────────────────────────────────────────── */
+
+function attachLongPress(el, fn) {
+  let timer = null, moved = false;
+  const start = () => {
+    moved = false;
+    timer = setTimeout(() => {
+      if (!moved) { el.dataset.longpress = "1"; fn(); }
+    }, 480);
+  };
+  const cancel = () => { moved = true; clearTimeout(timer); };
+  el.addEventListener("touchstart", start, { passive: true });
+  el.addEventListener("touchmove", cancel, { passive: true });
+  el.addEventListener("touchend", cancel);
+  el.addEventListener("touchcancel", cancel);
+  el.addEventListener("contextmenu", (e) => { e.preventDefault(); fn(); });
+  // Тап після довгого утримання не має ще й відкривати нотатку.
+  el.addEventListener("click", (e) => {
+    if (el.dataset.longpress) { e.stopImmediatePropagation(); delete el.dataset.longpress; }
+  }, true);
+}
+
+/* ── Тема ─────────────────────────────────────────────────────────────── */
+
+function cycleTheme() {
+  const cur = localStorage.getItem("sklo.theme") || "auto";
+  const next = cur === "auto" ? "dark" : cur === "dark" ? "light" : "auto";
+  try { localStorage.setItem("sklo.theme", next); } catch (e) {}
+  applyTheme();
+  toast(next === "auto" ? "Тема: як у системі" : next === "dark" ? "Тема: темна" : "Тема: світла");
+}
+
+function applyTheme() {
+  let t = "auto";
+  try { t = localStorage.getItem("sklo.theme") || "auto"; } catch (e) {}
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+
+  const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#07070d" : "#f4f1fa");
+}
+
+/* ── Старт ────────────────────────────────────────────────────────────── */
+
+// Апаратна «назад» на Android закриває нотатку замість того, щоб виходити зі сторінки.
+window.addEventListener("popstate", () => {
+  const sheetEl = document.getElementById("sheet");
+  if (sheetEl) { sheetEl.remove(); history.pushState({ s: 1 }, ""); return; }
+  if (ui.view === "editor") { closeEditor(); history.pushState({ s: 1 }, ""); return; }
+  if (ui.tab !== "notes") { ui.tab = "notes"; render(); history.pushState({ s: 1 }, ""); }
+});
+
+applyTheme();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+setAccentVar(ACCENT_HEX.violet);
+load();
+render();
+history.pushState({ s: 1 }, "");
+</script>
+</body>
+</html>
