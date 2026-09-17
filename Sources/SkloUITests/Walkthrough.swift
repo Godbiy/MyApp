@@ -24,6 +24,13 @@ final class Walkthrough: XCTestCase {
     /// Тапає кнопку з таким підписом, якщо вона є. Мовчки пропускає, якщо ні.
     @discardableResult
     private func tap(_ label: String, wait: Double = 3) -> Bool {
+        // Якщо застосунок зник з екрана, решта кроків тихо провалювалась би в
+        // порожнечу, а тест звітував би про успіх. Краще підняти його знову.
+        if app.state != .runningForeground {
+            print("застосунок не спереду (\(app.state.rawValue)) — піднімаю")
+            app.activate()
+            _ = app.wait(for: .runningForeground, timeout: 10)
+        }
         let button = app.buttons[label]
         guard button.waitForExistence(timeout: wait), button.isHittable else {
             print("пропускаю «\(label)» — не знайшов")

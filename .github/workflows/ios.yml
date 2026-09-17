@@ -175,6 +175,17 @@ jobs:
           xcrun simctl status_bar "$UDID" override --time "9:41" \
             --cellularBars 4 --wifiBars 3 --batteryState charged --batteryLevel 100
 
+          # Збірка тестового пакета йде ДО запису. Інакше вона займає перші
+          # півтори хвилини відео, і глядач дивиться на домашній екран, поки
+          # xcodebuild мовчки компілює.
+          xcodebuild build-for-testing \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+
           mkdir -p "$RUNNER_TEMP/video"
           xcrun simctl io "$UDID" recordVideo --codec h264 \
             "$RUNNER_TEMP/video/$APP_NAME-walkthrough.mp4" &
@@ -184,12 +195,12 @@ jobs:
           set +e
           # Без -quiet: коли прохід зривається, причина має бути в журналі,
           # інакше лишається тільки «TEST FAILED» і жодної підказки.
-          xcodebuild test \
+          xcodebuild test-without-building \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath "$RUNNER_TEMP/dd" \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -60
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -80
           STATUS=$?
           set -e
 
