@@ -1,0 +1,152 @@
+name: Mac Desktop
+
+# Живий робочий стіл macOS із симулятором, доступний із браузера.
+#
+# Сенс: айфона й Mac під рукою немає, а раннер GitHub — це справжній Mac.
+# Вмикаємо на ньому доступ до екрана, загортаємо у веб-клієнт і виводимо
+# назовні через тимчасовий тунель. Виходить застосунок, який можна тикати
+# мишкою, без жодних реєстрацій і встановлень на своєму боці.
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Скільки хвилин тримати сеанс (макс. 300)"
+        default: "45"
+        required: true
+      pane:
+        description: "На якому екрані відкрити застосунок: 0 нотатки, 1 теки, 2 налаштування"
+        default: "0"
+        required: false
+
+concurrency:
+  group: mac-desktop
+  cancel-in-progress: true
+
+env:
+  PROJECT: Sklo.xcodeproj
+  SCHEME: Sklo
+  APP_NAME: Sklo
+  BUNDLE_ID: com.godbiy.sklo
+
+jobs:
+  desktop:
+    runs-on: macos-latest
+    timeout-minutes: 330
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install XcodeGen
+        run: brew install --quiet xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build for simulator
+        run: |
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      # Симулятор піднімаємо заздалегідь: хай застосунок уже стоїть на екрані,
+      # коли підключишся, а не витрачає твої хвилини на збірку.
+      - name: Boot the simulator with the app open
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
+          UDID=$(xcrun simctl list devices available \
+                 | grep -oE 'iPhone[^(]*\(([0-9A-Fa-f-]{36})\)' \
+                 | head -1 | grep -oE '[0-9A-Fa-f-]{36}')
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" \
+            --cellularBars 4 --wifiBars 3 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$UDID" "$APP"
+
+          # Вікно самого симулятора — інакше на робочому столі буде порожньо.
+          open -a Simulator --args -CurrentDeviceUDID "$UDID"
+          sleep 10
+          xcrun simctl launch "$UDID" "$BUNDLE_ID" -uiPane "${{ inputs.pane }}" || true
+
+      - name: Turn on screen sharing
+        env:
+          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VNC_PASSWORD:-}" ]; then
+            echo "::error::немає секрету VNC_PASSWORD"
+            exit 1
+          fi
+          # Застарілий протокол VNC тримає рівно 8 символів пароля.
+          PW=$(printf '%.8s' "$VNC_PASSWORD")
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+            -activate -configure -access -on \
+            -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw "$PW" \
+            -restart -agent -privs -all
+          sleep 5
+          nc -z localhost 5900 && echo "екран віддається на 5900" || echo "::warning::порт 5900 мовчить"
+
+      - name: Publish the screen to a browser
+        run: |
+          set -euo pipefail
+          brew install --quiet novnc websockify cloudflared
+
+          # Шлях до веб-клієнта різниться між версіями формули — шукаємо vnc.html.
+          NOVNC=$(find "$(brew --prefix)" -name "vnc.html" -path "*novnc*" 2>/dev/null | head -1)
+          NOVNC_DIR=$(dirname "$NOVNC")
+          echo "веб-клієнт: $NOVNC_DIR"
+
+          websockify --web "$NOVNC_DIR" 6080 localhost:5900 \
+            > "$RUNNER_TEMP/websockify.log" 2>&1 &
+          sleep 4
+
+          cloudflared tunnel --url http://localhost:6080 --no-autoupdate \
+            > "$RUNNER_TEMP/tunnel.log" 2>&1 &
+
+          # Тунель друкує адресу не одразу — чекаємо, поки з'явиться.
+          for i in $(seq 1 30); do
+            URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$RUNNER_TEMP/tunnel.log" | head -1 || true)
+            [ -n "$URL" ] && break
+            sleep 2
+          done
+
+          if [ -z "${URL:-}" ]; then
+            echo "::error::тунель не піднявся"
+            cat "$RUNNER_TEMP/tunnel.log"
+            exit 1
+          fi
+
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          {
+            echo "## Робочий стіл macOS готовий"
+            echo ""
+            echo "### [$URL/vnc.html?autoconnect=true&resize=scale]($URL/vnc.html?autoconnect=true&resize=scale)"
+            echo ""
+            echo "Пароль — той, що ми домовились (секрет \`VNC_PASSWORD\`)."
+            echo ""
+            echo "Сеанс живе ${{ inputs.minutes }} хв. Щоб обірвати раніше — зупини цю збірку."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "::notice title=Відкрий це::$URL/vnc.html?autoconnect=true&resize=scale"
+
+      - name: Hold the session open
+        run: |
+          MIN=${{ inputs.minutes }}
+          MIN=$(( MIN > 300 ? 300 : MIN ))
+          echo "тримаю сеанс $MIN хв"
+          echo "адреса: $URL/vnc.html?autoconnect=true&resize=scale"
+          for i in $(seq 1 "$MIN"); do
+            sleep 60
+            echo "[$i/$MIN хв] живий — $URL/vnc.html"
+          done
+          echo "час вийшов, вимикаюсь"
