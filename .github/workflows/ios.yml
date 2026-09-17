@@ -15,6 +15,7 @@ env:
   PROJECT: Sklo.xcodeproj
   SCHEME: Sklo
   APP_NAME: Sklo
+  BUNDLE_ID: com.godbiy.sklo
 
 permissions:
   contents: write
@@ -48,6 +49,7 @@ jobs:
             -configuration Debug \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
             -quiet \
             CODE_SIGNING_ALLOWED=NO \
             build
@@ -101,6 +103,70 @@ jobs:
             Як поставити на айфон — див. [docs/GUIDE.md](https://github.com/Godbiy/MyApp/blob/main/docs/GUIDE.md#3-як-поставити-на-айфон).
           prerelease: true
           files: ${{ runner.temp }}/out/*.ipa
+
+      # На раннері стоїть справжній iOS-симулятор. Єдина нагода побачити
+      # застосунок живим, коли під рукою немає ні Mac, ні айфона.
+      - name: Run in the simulator and screenshot
+        id: shots
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
+          test -d "$APP" || { echo "::error::не знайдено $APP"; exit 1; }
+
+          # Беремо перший доступний айфон зі списку готових симуляторів.
+          UDID=$(xcrun simctl list devices available \
+                 | grep -oE 'iPhone[^(]*\(([0-9A-Fa-f-]{36})\)' \
+                 | head -1 | grep -oE '[0-9A-Fa-f-]{36}')
+          echo "симулятор: $UDID"
+
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          # Чистий рядок стану, щоб знімки не залежали від годинника раннера.
+          xcrun simctl status_bar "$UDID" override --time "9:41" \
+            --cellularBars 4 --wifiBars 3 --batteryState charged --batteryLevel 100
+
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p "$RUNNER_TEMP/shots"
+
+          shoot() {
+            sleep "$2"
+            xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/$1.png"
+            echo "знято: $1"
+          }
+
+          xcrun simctl ui "$UDID" appearance dark
+          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          shoot 01-notes-dark 8
+
+          xcrun simctl ui "$UDID" appearance light
+          shoot 02-notes-light 3
+
+          xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+          xcrun simctl shutdown "$UDID" || true
+
+      - name: Upload screenshots
+        if: always() && steps.shots.outcome != 'skipped'
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.APP_NAME }}-screenshots
+          path: ${{ runner.temp }}/shots/*.png
+          if-no-files-found: warn
+
+      # Симуляторну збірку можна закинути в appetize.io і покрутити застосунок
+      # у браузері з будь-якої системи — це найближче до живого пристрою,
+      # що доступне без Mac.
+      - name: Package simulator build
+        run: |
+          cd "$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator"
+          zip -qry "$RUNNER_TEMP/out/$APP_NAME-simulator.zip" "$APP_NAME.app"
+          ls -lh "$RUNNER_TEMP/out/$APP_NAME-simulator.zip"
+
+      - name: Upload simulator build
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.APP_NAME }}-simulator-app
+          path: ${{ runner.temp }}/out/*-simulator.zip
+          if-no-files-found: error
 
       - name: Attach .ipa to tagged release
         if: startsWith(github.ref, 'refs/tags/v')
