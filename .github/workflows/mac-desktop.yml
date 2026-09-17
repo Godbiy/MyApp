@@ -73,6 +73,12 @@ jobs:
             --cellularBars 4 --wifiBars 3 --batteryState charged --batteryLevel 100
           xcrun simctl install "$UDID" "$APP"
 
+          # Дисплей гасне від бездіяльності, і той, хто підключиться пізніше,
+          # побачить чорне поле замість застосунку. Тримаємо його неспаним
+          # на весь сеанс.
+          caffeinate -disu &
+          echo "дисплей утримується неспаним"
+
           # Вікно самого симулятора — інакше на робочому столі буде порожньо.
           open -a Simulator --args -CurrentDeviceUDID "$UDID"
           sleep 10
@@ -166,6 +172,13 @@ jobs:
           } > "$RUNNER_TEMP/link/auth-report.txt" 2>&1
           cat "$RUNNER_TEMP/link/auth-report.txt"
 
+          # Машина знімає власний стіл. Екран віддається одному глядачеві за
+          # раз, тож перевіряти його підключенням — означає займати місце
+          # того, для кого сеанс і піднімали.
+          screencapture -x "$RUNNER_TEMP/link/desktop.png" 2>&1 \
+            && echo "знімок столу зроблено" \
+            || echo "::warning::знімок столу не вдався — можливо, немає графічного сеансу"
+
       - name: Publish the screen to a browser
         env:
           VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
@@ -254,7 +267,9 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: desktop-url
-          path: ${{ runner.temp }}/link/*.txt
+          path: |
+            ${{ runner.temp }}/link/*.txt
+            ${{ runner.temp }}/link/*.png
           if-no-files-found: error
 
       - name: Hold the session open
