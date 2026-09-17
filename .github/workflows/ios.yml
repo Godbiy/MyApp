@@ -182,13 +182,14 @@ jobs:
           sleep 2
 
           set +e
+          # Без -quiet: коли прохід зривається, причина має бути в журналі,
+          # інакше лишається тільки «TEST FAILED» і жодної підказки.
           xcodebuild test \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -destination "platform=iOS Simulator,id=$UDID" \
             -derivedDataPath "$RUNNER_TEMP/dd" \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -60
           STATUS=$?
           set -e
 

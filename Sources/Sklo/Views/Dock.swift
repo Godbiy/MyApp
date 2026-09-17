@@ -28,10 +28,10 @@ struct Dock: View {
 
     private var bar: some View {
         HStack(spacing: 0) {
-            dockButton("list.bullet", index: 0) { go(0) }
-            dockButton("folder", index: 1) { go(1) }
-            dockButton("magnifyingglass", index: 2) { startSearch() }
-            dockButton("slider.horizontal.3", index: 3) { go(2) }
+            dockButton("list.bullet", label: "Нотатки", index: 0) { go(0) }
+            dockButton("folder", label: "Теки", index: 1) { go(1) }
+            dockButton("magnifyingglass", label: "Пошук", index: 2) { startSearch() }
+            dockButton("slider.horizontal.3", label: "Налаштування", index: 3) { go(2) }
         }
         .padding(.horizontal, 8)
         .frame(height: 62)
@@ -58,7 +58,7 @@ struct Dock: View {
         .animation(.easeInOut(duration: 0.24), value: searching)
     }
 
-    private func dockButton(_ name: String, index: Int, action: @escaping () -> Void) -> some View {
+    private func dockButton(_ name: String, label: String, index: Int, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: name)
                 .font(.system(size: 19, weight: .medium))
@@ -68,6 +68,9 @@ struct Dock: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressScale(scale: 0.86))
+        // Самі лише іконки не мають підпису: їх не оголосить VoiceOver
+        // і не знайде жоден автоматичний прохід.
+        .accessibilityLabel(label)
     }
 
     private var searchField: some View {
@@ -105,8 +108,18 @@ struct Dock: View {
         }
         .buttonStyle(PressScale(scale: 0.9))
         .glass(.thick, radius: 31, blurred: true, tinted: accent)
+        .accessibilityLabel(primaryLabel)
         .animation(.spring(response: 0.34, dampingFraction: 0.7), value: searching)
         .animation(.easeInOut(duration: 0.28), value: pane)
+    }
+
+    private var primaryLabel: String {
+        if searching { return "Закрити пошук" }
+        switch pane {
+        case 1: return "Нова тека"
+        case 2: return "Перемішати тло"
+        default: return "Нова нотатка"
+        }
     }
 
     private var primaryIcon: String {
