@@ -3,40 +3,49 @@ import SwiftUI
 struct NoteEditorView: View {
     let store: NoteStore
     let noteID: UUID
+    let accent: Color
     var onClose: () -> Void
 
     @State private var draft: Note
     @State private var confirmingDelete = false
     @FocusState private var focusedField: Field?
+    @Environment(\.colorScheme) private var scheme
 
     private enum Field: Hashable {
         case title, body, item(UUID)
     }
 
-    init(store: NoteStore, noteID: UUID, onClose: @escaping () -> Void) {
+    init(store: NoteStore, noteID: UUID, accent: Color, onClose: @escaping () -> Void) {
         self.store = store
         self.noteID = noteID
+        self.accent = accent
         self.onClose = onClose
         _draft = State(initialValue: store.note(noteID) ?? Note())
     }
 
-    private var accent: Color {
-        store.folder(draft.folderID)?.accent.color ?? Palette.violet
+    private var noteAccent: Color {
+        store.folder(draft.folderID)?.accent.color ?? accent
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            // Тло під редактором густішає, щоб список не просвічував крізь скло.
+            Rectangle()
+                .fill((scheme == .dark ? Palette.inkDark : Palette.inkLight).opacity(0.55))
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
                 nav
                     .padding(.horizontal, 20)
-                    .padding(.top, 2)
+                    .padding(.top, 4)
 
                 ScrollView {
                     paper
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
-                        .padding(.bottom, 132)
+                        .padding(.bottom, 140)
                 }
+                .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
             }
 
@@ -61,28 +70,30 @@ struct NoteEditorView: View {
     // MARK: - Шапка
 
     private var nav: some View {
-        HStack(spacing: 10) {
-            Button {
-                onClose()
-            } label: {
+        HStack(spacing: 8) {
+            Button(action: onClose) {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .bold))
                     Text(store.folder(draft.folderID)?.name ?? "Нотатки")
                         .font(.system(size: 15, weight: .bold))
+                        .lineLimit(1)
                 }
                 .padding(.leading, 12)
                 .padding(.trailing, 16)
                 .frame(height: 44)
             }
-            .buttonStyle(.plain)
-            .glass(.regular, radius: 22)
+            .buttonStyle(PressScale(scale: 0.94))
+            // Довга назва теки інакше роздуває кнопку на пів екрана, а текст
+            // переноситься у два рядки всередині 44-піксельної пігулки.
+            .frame(maxWidth: 200)
+            .glass(.regular, radius: 22, blurred: true)
 
             Spacer(minLength: 0)
 
             GlassIconButton(
                 systemName: draft.isPinned ? "pin.fill" : "pin",
-                tint: draft.isPinned ? accent : nil
+                tint: draft.isPinned ? noteAccent : nil
             ) {
                 draft.isPinned.toggle()
             }
@@ -92,8 +103,8 @@ struct NoteEditorView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44)
             }
-            .buttonStyle(.plain)
-            .glass(.regular, radius: 22)
+            .buttonStyle(PressScale(scale: 0.92))
+            .glass(.regular, radius: 22, blurred: true)
         }
     }
 
@@ -142,7 +153,7 @@ struct NoteEditorView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(EdgeInsets(top: 24, leading: 22, bottom: 26, trailing: 22))
-        .glass(.regular, radius: 30)
+        .glass(.regular, radius: 30, blurred: true)
     }
 
     private func checklistRow(_ item: Binding<ChecklistItem>) -> some View {
@@ -152,7 +163,7 @@ struct NoteEditorView: View {
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(item.wrappedValue.isDone ? accent : Color.primary.opacity(0.09))
+                        .fill(item.wrappedValue.isDone ? noteAccent : Color.primary.opacity(0.09))
                         .overlay {
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .strokeBorder(
@@ -168,8 +179,9 @@ struct NoteEditorView: View {
                 }
                 .frame(width: 23, height: 23)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScale(scale: 0.85))
             .padding(.top, 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: item.wrappedValue.isDone)
 
             TextField("Пункт", text: item.text, axis: .vertical)
                 .font(.skloChecklist)
@@ -178,18 +190,16 @@ struct NoteEditorView: View {
                 .focused($focusedField, equals: .item(item.wrappedValue.id))
                 .onSubmit { addItem() }
 
-            if !item.wrappedValue.text.isEmpty || draft.items.count > 1 {
-                Button {
-                    let id = item.wrappedValue.id
-                    draft.items.removeAll { $0.id == id }
-                } label: {
-                    Image(systemName: "minus.circle")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 3)
+            Button {
+                let id = item.wrappedValue.id
+                draft.items.removeAll { $0.id == id }
+            } label: {
+                Image(systemName: "minus.circle")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
             }
+            .buttonStyle(PressScale(scale: 0.85))
+            .padding(.top, 3)
         }
     }
 
@@ -199,31 +209,26 @@ struct NoteEditorView: View {
         HStack(spacing: 10) {
             HStack(spacing: 0) {
                 dockButton("checklist") { addItem() }
-                dockButton(focusedField == nil ? "textformat" : "keyboard.chevron.compact.down") {
-                    if focusedField == nil {
-                        focusedField = .body
-                    } else {
-                        focusedField = nil
-                    }
-                }
                 dockButton("trash") { confirmingDelete = true }
             }
-            .padding(.horizontal, 6)
-            .frame(height: 58)
-            .glass(.thick, radius: 29)
+            .padding(.horizontal, 8)
+            .frame(height: 62)
+            .glass(.thick, radius: 31, blurred: true)
 
+            // Та сама геометрія, що й «+» у списку: текстова кнопка на вузькому
+            // екрані змагалась за ширину з рештою панелі й не влазила.
             Button {
                 focusedField = nil
                 onClose()
             } label: {
-                Text("Готово")
-                    .font(.system(size: 15.5, weight: .bold))
+                Image(systemName: "checkmark")
+                    .font(.system(size: 23, weight: .bold))
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 22)
-                    .frame(height: 58)
+                    .frame(width: 62, height: 62)
             }
-            .buttonStyle(.plain)
-            .glass(.thick, radius: 29, tinted: accent)
+            .buttonStyle(PressScale(scale: 0.9))
+            .glass(.thick, radius: 31, blurred: true, tinted: noteAccent)
+            .accessibilityLabel("Готово")
         }
         .padding(.horizontal, 20)
     }
@@ -231,12 +236,13 @@ struct NoteEditorView: View {
     private func dockButton(_ systemName: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(.primary.opacity(0.88))
-                .frame(width: 46, height: 44)
+                .font(.system(size: 19, weight: .medium))
+                .foregroundStyle(.primary.opacity(0.85))
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
+                .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
+        .buttonStyle(PressScale(scale: 0.86))
     }
 
     private func addItem() {

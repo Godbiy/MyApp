@@ -56,4 +56,5 @@ extension Font {
     static let skloBody = Font.system(size: 15.5, weight: .regular, design: .serif)
     static let skloPreview = Font.system(size: 13.5, weight: .regular, design: .serif)
     static let skloChecklist = Font.system(size: 14.5, weight: .regular, design: .serif)
+    static let skloSettingHint = Font.system(size: 12.5, weight: .regular, design: .serif)
 }

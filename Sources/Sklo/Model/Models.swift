@@ -104,6 +104,24 @@ extension Date {
     }
 }
 
+/// Українська потребує різних форм числа. Тримаємо їх в одному місці, бо
+/// про них легко забути там, де число підставляється в рядок.
+enum Declension {
+    /// Місцевий відмінок: «у 1 нотатці», але «у 2 / 11 / 25 нотатках».
+    static func locative(_ n: Int) -> String {
+        (n % 10 == 1 && n % 100 != 11) ? "нотатці" : "нотатках"
+    }
+
+    /// Називний: 1 нотатка, 2 нотатки, 5 нотаток.
+    static func nominative(_ n: Int) -> String {
+        let m100 = n % 100, m10 = n % 10
+        if (11...14).contains(m100) { return "нотаток" }
+        if m10 == 1 { return "нотатка" }
+        if (2...4).contains(m10) { return "нотатки" }
+        return "нотаток"
+    }
+}
+
 extension String {
     var capitalizedFirst: String {
         guard let first else { return self }

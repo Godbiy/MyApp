@@ -113,11 +113,22 @@ final class NoteStore {
         delete(id)
     }
 
-    func addFolder(name: String, accent: Accent) {
+    @discardableResult
+    func addFolder(name: String, accent: Accent) -> Folder? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        folders.append(Folder(name: trimmed, accent: accent))
+        guard !trimmed.isEmpty else { return nil }
+        let folder = Folder(name: trimmed, accent: accent)
+        folders.append(folder)
         save()
+        return folder
+    }
+
+    /// Повне стирання з наступним засівом — щоб екран не лишився порожнім
+    /// без жодного пояснення.
+    func wipe() {
+        notes = []
+        folders = []
+        seed()
     }
 
     func deleteFolder(_ id: UUID) {
@@ -182,15 +193,15 @@ final class NoteStore {
             body: """
             Це звичайна нотатка — гортай, правь, видаляй.
 
-            Тапни «+» унизу, щоб написати свою. Шпилька зверху закріплює нотатку над рештою, теки фільтрують список.
+            Гортай пальцем ліворуч, щоб перейти до тек і налаштувань. Тапни «+» унизу, щоб написати свою.
             """,
             folderID: defaults.first?.id,
             isPinned: true
         )
         hello.items = [
             ChecklistItem(text: "Написати першу нотатку"),
-            ChecklistItem(text: "Спробувати теки"),
-            ChecklistItem(text: "Закріпити щось важливе"),
+            ChecklistItem(text: "Створити свою теку"),
+            ChecklistItem(text: "Покрутити тло в налаштуваннях"),
         ]
 
         notes = [hello]

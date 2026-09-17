@@ -14,19 +14,20 @@ enum GlassTier {
     /// Плаваюча панель. Єдине, що завжди поверх контенту.
     case thick
 
-    fileprivate func fill(_ scheme: ColorScheme) -> [Color] {
-        let (top, bottom): (Double, Double)
+    fileprivate func fill(_ scheme: ColorScheme, _ k: Double) -> [Color] {
+        let top: Double
+        let bottom: Double
         switch self {
         case .thin: (top, bottom) = (0.155, 0.050)
         case .regular: (top, bottom) = (0.190, 0.060)
         case .thick: (top, bottom) = (0.190, 0.055)
         }
         if scheme == .dark {
-            return [.white.opacity(top), .white.opacity(bottom)]
+            return [.white.opacity(min(1, top * k)), .white.opacity(min(1, bottom * k))]
         }
         // У світлій темі скло не «підсвічує» тло, а згущує його до білого,
         // інакше матеріал читається як брудна пляма.
-        return [.white.opacity(0.78 + top), .white.opacity(0.44 + bottom)]
+        return [.white.opacity(min(1, (0.78 + top) * k)), .white.opacity(min(1, (0.44 + bottom) * k))]
     }
 
     fileprivate func stroke(_ scheme: ColorScheme) -> [Color] {
@@ -51,100 +52,104 @@ enum GlassTier {
 private struct GlassSurface: ViewModifier {
     let tier: GlassTier
     let radius: CGFloat
-    var tinted: Color?
+    /// Розмиття лишаємо лише там, де під поверхнею справді проїжджає контент.
+    /// Над уже розмитим тлом воно невидиме, але коштує окремого шару на
+    /// кожен елемент — саме на цьому дохла прокрутка у веб-версії.
+    let blurred: Bool
+    let tinted: Color?
 
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.glassDensity) private var density
 
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: radius, style: .continuous)
+    }
+
+    private var fillColors: [Color] {
+        if let tinted { return [tinted.opacity(0.90), tinted.opacity(0.55)] }
+        return tier.fill(scheme, density)
+    }
+
+    private var strokeColors: [Color] {
+        if tinted != nil { return [.white.opacity(0.55), .white.opacity(0.18)] }
+        return tier.stroke(scheme)
     }
 
     func body(content: Content) -> some View {
         let shadow = tier.shadow
         return content
             .background {
-                shape
-                    .fill(.ultraThinMaterial)
-                    .overlay {
-                        shape.fill(
-                            LinearGradient(
-                                colors: tinted.map { [$0.opacity(0.90), $0.opacity(0.55)] }
-                                    ?? tier.fill(scheme),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                ZStack {
+                    if blurred {
+                        shape.fill(.ultraThinMaterial)
                     }
-                    .overlay {
-                        shape.strokeBorder(
-                            LinearGradient(
-                                colors: tinted != nil
-                                    ? [.white.opacity(0.55), .white.opacity(0.18)]
-                                    : tier.stroke(scheme),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1
-                        )
-                    }
-                    .shadow(
-                        color: .black.opacity(scheme == .dark ? shadow.opacity : shadow.opacity * 0.34),
-                        radius: shadow.radius,
-                        x: 0,
-                        y: shadow.y
+                    shape.fill(
+                        LinearGradient(colors: fillColors, startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
+                    shape.strokeBorder(
+                        LinearGradient(colors: strokeColors, startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1
+                    )
+                }
+                .shadow(
+                    color: .black.opacity(scheme == .dark ? shadow.opacity : shadow.opacity * 0.34),
+                    radius: shadow.radius,
+                    x: 0,
+                    y: shadow.y
+                )
             }
+    }
+}
+
+/// Поверхня без власної тіні — для дрібних елементів, під якими тіні нікуди
+/// лягти: у стрічці з прокруткою вона зрізається й читається як сіра смуга.
+private struct FlatGlass: ViewModifier {
+    let radius: CGFloat
+    @Environment(\.colorScheme) private var scheme
+    @Environment(\.glassDensity) private var density
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return content
+            .background {
+                ZStack {
+                    shape.fill(
+                        LinearGradient(
+                            colors: GlassTier.thin.fill(scheme, density),
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                    shape.strokeBorder(
+                        LinearGradient(
+                            colors: GlassTier.thin.stroke(scheme),
+                            startPoint: .top, endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+                }
+            }
+    }
+}
+
+private struct GlassDensityKey: EnvironmentKey {
+    static let defaultValue: Double = 1
+}
+
+extension EnvironmentValues {
+    var glassDensity: Double {
+        get { self[GlassDensityKey.self] }
+        set { self[GlassDensityKey.self] = newValue }
     }
 }
 
 extension View {
     /// Скляна поверхня. `tinted` заливає її акцентом — для головної дії.
-    func glass(_ tier: GlassTier, radius: CGFloat, tinted: Color? = nil) -> some View {
-        modifier(GlassSurface(tier: tier, radius: radius, tinted: tinted))
-    }
-}
-
-/// Кольорове поле, яке скло заломлює. Без насиченого тла матеріал не видно —
-/// на рівному сірому він виглядає просто брудним.
-struct AmbientBackground: View {
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        ZStack {
-            (scheme == .dark ? Palette.inkDark : Palette.inkLight)
-
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
-                ZStack {
-                    bloom(Palette.violet, 0.50, CGSize(width: w * 1.15, height: h * 0.60))
-                        .position(x: w * 0.12, y: h * -0.02)
-                    bloom(Palette.teal, 0.36, CGSize(width: w * 1.00, height: h * 0.48))
-                        .position(x: w * 0.96, y: h * 0.14)
-                    bloom(Palette.pink, 0.38, CGSize(width: w * 1.05, height: h * 0.50))
-                        .position(x: w * 0.74, y: h * 0.98)
-                    bloom(Palette.amber, 0.26, CGSize(width: w * 0.90, height: h * 0.42))
-                        .position(x: w * 0.02, y: h * 0.86)
-                }
-                .blur(radius: 26)
-            }
-        }
-        .ignoresSafeArea()
+    func glass(_ tier: GlassTier, radius: CGFloat, blurred: Bool = false, tinted: Color? = nil) -> some View {
+        modifier(GlassSurface(tier: tier, radius: radius, blurred: blurred, tinted: tinted))
     }
 
-    private func bloom(_ color: Color, _ opacity: Double, _ size: CGSize) -> some View {
-        Ellipse()
-            .fill(
-                RadialGradient(
-                    colors: [
-                        color.opacity(scheme == .dark ? opacity : opacity * 0.92),
-                        color.opacity(0)
-                    ],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: max(size.width, size.height) / 2
-                )
-            )
-            .frame(width: size.width, height: size.height)
+    /// Поверхня без тіні — чіпи й таке інше.
+    func flatGlass(radius: CGFloat) -> some View {
+        modifier(FlatGlass(radius: radius))
     }
 }
