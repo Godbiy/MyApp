@@ -167,8 +167,11 @@ jobs:
           cat "$RUNNER_TEMP/link/auth-report.txt"
 
       - name: Publish the screen to a browser
+        env:
+          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}
         run: |
           set -euo pipefail
+          PW_URL=$(printf '%.8s' "$VNC_PASSWORD")
 
           # Ні noVNC, ні cloudflared не варто брати з Homebrew: формули novnc
           # там немає взагалі, а решта залежить від стану крана. Обидва — це
@@ -178,6 +181,40 @@ jobs:
           curl -sL https://github.com/novnc/noVNC/archive/refs/tags/v1.5.0.tar.gz \
             | tar xz -C "$NOVNC_DIR" --strip-components=1
           test -f "$NOVNC_DIR/vnc.html" || { echo "::error::веб-клієнт не розпакувався"; exit 1; }
+
+          # noVNC перебирає схеми автентифікації в порядку, який пропонує
+          # сервер, і бере першу підтримувану. macOS ставить першою свою
+          # фірмову (тип 30) — а її реалізація в браузері раз за разом не
+          # доходить до кінця. Поруч сервер пропонує звичайний парольний вхід
+          # (тип 2), який працює безвідмовно й не питає імені користувача.
+          # Тож просимо клієнта надавати перевагу саме йому.
+          python3 - "$NOVNC_DIR/core/rfb.js" <<'PATCH'
+import sys, io
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+old = '''            this._rfbAuthScheme = -1;
+            for (let type of types) {
+                if (this._isSupportedSecurityType(type)) {
+                    this._rfbAuthScheme = type;
+                    break;
+                }
+            }'''
+new = '''            this._rfbAuthScheme = -1;
+            if (Array.prototype.includes.call(types, securityTypeVNCAuth)) {
+                this._rfbAuthScheme = securityTypeVNCAuth;
+            } else {
+                for (let type of types) {
+                    if (this._isSupportedSecurityType(type)) {
+                        this._rfbAuthScheme = type;
+                        break;
+                    }
+                }
+            }'''
+if old not in s:
+    sys.exit("не знайшов місце вибору схеми — клієнт змінився")
+io.open(p, "w", encoding="utf-8", newline="\n").write(s.replace(old, new, 1))
+print("клієнт налаштовано на парольний вхід")
+PATCH
 
           # Власне середовище: системний python3 на раннері захищений від
           # встановлення пакетів напряму.
@@ -212,27 +249,31 @@ jobs:
             exit 1
           fi
 
+          # Пароль у самій адресі: парольний вхід не питає імені, а руками
+          # вводити вже нічого не доводиться.
+          FULL="$URL/vnc.html?autoconnect=true&resize=scale&password=$PW_URL"
           echo "URL=$URL" >> "$GITHUB_ENV"
+          echo "FULL=$FULL" >> "$GITHUB_ENV"
           {
             echo "## Робочий стіл macOS готовий"
             echo ""
-            echo "### [$URL/vnc.html?autoconnect=true&resize=scale]($URL/vnc.html?autoconnect=true&resize=scale)"
+            echo "### [відкрити робочий стіл]($FULL)"
             echo ""
             echo "Користувач: **$VNC_USER**, пароль — секрет \`VNC_PASSWORD\`."
             echo ""
             echo "Сеанс живе ${{ inputs.minutes }} хв. Щоб обірвати раніше — зупини цю збірку."
           } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "::notice title=Відкрий це::$URL/vnc.html?autoconnect=true&resize=scale"
+          echo "::notice title=Відкрий це::$FULL"
 
           # Журнал працюючої збірки GitHub через API не віддає, а артефакт —
           # віддає одразу після викладення. Це єдиний спосіб дістати адресу,
           # не відкриваючи сторінку очима.
           mkdir -p "$RUNNER_TEMP/link"
           {
-            echo "$URL/vnc.html?autoconnect=true&resize=scale"
-            echo "користувач: $VNC_USER"
-            echo "(вхід перевірено на самому раннері перед публікацією)"
+            echo "$FULL"
+            echo ""
+            echo "нічого вводити не треба — пароль у самій адресі"
           } > "$RUNNER_TEMP/link/desktop-url.txt"
 
       - name: Publish the address
@@ -247,7 +288,7 @@ jobs:
           MIN=${{ inputs.minutes }}
           MIN=$(( MIN > 300 ? 300 : MIN ))
           echo "тримаю сеанс $MIN хв"
-          echo "адреса: $URL/vnc.html?autoconnect=true&resize=scale"
+          echo "адреса: $FULL"
           for i in $(seq 1 "$MIN"); do
             sleep 60
             echo "[$i/$MIN хв] живий — $URL/vnc.html"
