@@ -75,7 +75,7 @@ struct NoteEditorView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .bold))
-                    Text(store.folder(draft.folderID)?.name ?? "Нотатки")
+                    Text(backTitle)
                         .font(.system(size: 15, weight: .bold))
                         .lineLimit(1)
                 }
@@ -84,9 +84,6 @@ struct NoteEditorView: View {
                 .frame(height: 44)
             }
             .buttonStyle(PressScale(scale: 0.94))
-            // Довга назва теки інакше роздуває кнопку на пів екрана, а текст
-            // переноситься у два рядки всередині 44-піксельної пігулки.
-            .frame(maxWidth: 200)
             .glass(.regular, radius: 22, blurred: true)
 
             Spacer(minLength: 0)
@@ -106,6 +103,13 @@ struct NoteEditorView: View {
             .buttonStyle(PressScale(scale: 0.92))
             .glass(.regular, radius: 22, blurred: true)
         }
+    }
+
+    /// Обрізаємо саму назву, а не ширину кнопки: фіксована ширина робила
+    /// пігулку завеликою навіть для короткого слова.
+    private var backTitle: String {
+        let name = store.folder(draft.folderID)?.name ?? "Нотатки"
+        return name.count > 16 ? String(name.prefix(15)) + "…" : name
     }
 
     private var shareText: String {

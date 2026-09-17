@@ -25,7 +25,11 @@ struct RootView: View {
             )
             GrainOverlay()
 
+            // Поки відкрита нотатка, каркас ховається: затемнення на 0.55
+            // його не перекривало, і великий заголовок «Нотатки» проступав
+            // крізь аркуш, читаючись як збій малювання.
             shell
+                .opacity(openNote == nil ? 1 : 0)
 
             if let id = openNote {
                 NoteEditorView(store: store, noteID: id, accent: accent) {
