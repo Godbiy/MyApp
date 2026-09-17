@@ -165,6 +165,12 @@ a { color: var(--accent); }
   box-shadow: inset 0 1px 0 var(--hi), 0 12px 32px var(--shadow);
 }
 .g-reg { background: var(--glass-reg); border-color: var(--stroke-reg); }
+
+/* Плоске скло: та сама заливка, штрих і тінь, але без backdrop-filter.
+   Для поверхонь, що лежать просто на тлі, — воно вже розмите, тож
+   розмивати вдруге коштує по буферу на елемент і не дає нічого видимого.
+   Справжнє скло лишається там, де під ним справді проїжджає контент. */
+.g-flat { backdrop-filter: none; -webkit-backdrop-filter: none; }
 .g-thick {
   backdrop-filter: blur(calc(var(--blur) * 1.25)) saturate(200%);
   -webkit-backdrop-filter: blur(calc(var(--blur) * 1.25)) saturate(200%);
@@ -182,12 +188,25 @@ a { color: var(--accent); }
   overflow: hidden;
 }
 
-.head { display: flex; align-items: flex-end; gap: 12px; padding: 12px 20px 0; flex-shrink: 0; }
-.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); min-height: 15px; }
-.h1 { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin: 2px 0 0; min-height: 36px; }
-/* Текст шапки міняється м'яко — але сама шапка не зрушується ні на піксель. */
-.head-txt > * { transition: opacity .18s var(--ease); }
-.head.fading .head-txt > * { opacity: 0; }
+.head {
+  display: flex; align-items: flex-end; gap: 12px; padding: 12px 20px 0; flex-shrink: 0;
+  height: 68px; overflow: hidden;
+  transition: height .34s var(--ease), opacity .24s var(--ease),
+              transform .34s var(--ease), padding-top .34s var(--ease);
+}
+/* Під час пошуку заголовок нічого не додає — тож іде геть і віддає місце. */
+#app[data-search="on"] .head { height: 0; padding-top: 0; opacity: 0; transform: translateY(-10px); }
+
+.head-txt { position: relative; flex: 1; min-width: 0; height: 56px; }
+.ht { position: absolute; left: 0; right: 0; top: 0; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); }
+.h1 { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin: 2px 0 0; }
+/* Старий текст іде вгору, новий одночасно приходить знизу. Порожньої паузи
+   між ними немає — саме вона й читалась як смикання. */
+.ht.in  { animation: htIn .34s var(--ease) both; }
+.ht.out { animation: htOut .28s var(--ease) both; pointer-events: none; }
+@keyframes htIn  { from { opacity: 0; transform: translateY(14px); } }
+@keyframes htOut { to   { opacity: 0; transform: translateY(-14px); } }
 
 /* ── Сторінки ─────────────────────────────────────────────────────────── */
 .pager {
@@ -222,9 +241,16 @@ a { color: var(--accent); }
 
 .card {
   display: flex; flex-direction: column; gap: 6px; padding: 15px 16px 14px; border-radius: 23px;
-  text-align: left; width: 100%; animation: cardIn .4s var(--ease) both;
+  text-align: left; width: 100%;
+  /* Картки поза екраном не малюються й не розмиваються — саме на цьому
+     дохла прокрутка, бо кожна з них тримала власний backdrop-filter. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
 }
-@keyframes cardIn { from { opacity: 0; transform: translateY(12px) scale(.986); } }
+/* Дані лежать у localStorage і з'являються миттєво. Вдавати завантаження
+   каскадом — брехня, яку око читає як гальмо, тож список входить цілим. */
+.pad.fresh { animation: listIn .3s var(--ease) both; }
+@keyframes listIn { from { opacity: 0; transform: translateY(8px); } }
 .card.pin { border-color: color-mix(in srgb, var(--row-accent) 55%, transparent); background: var(--glass-reg); }
 .card-top { display: flex; align-items: center; gap: 8px; }
 .card-title { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 700; letter-spacing: -.012em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -326,7 +352,7 @@ a { color: var(--accent); }
 .paper textarea::placeholder { color: var(--text-3); opacity: 1; }
 
 .todos { display: flex; flex-direction: column; gap: 11px; margin-top: 20px; }
-.todo { display: flex; align-items: flex-start; gap: 11px; animation: cardIn .32s var(--ease) both; }
+.todo { display: flex; align-items: flex-start; gap: 11px; }
 .box {
   width: 24px; height: 24px; flex-shrink: 0; margin-top: 1px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -358,7 +384,7 @@ a { color: var(--accent); }
 
 /* ── Теки ─────────────────────────────────────────────────────────────── */
 .sect { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); padding: 0 4px; }
-.frow { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 20px; width: 100%; text-align: left; animation: cardIn .4s var(--ease) both; }
+.frow { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 20px; width: 100%; text-align: left; }
 .fic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(145deg, var(--row-accent), color-mix(in srgb, var(--row-accent) 70%, #000)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); }
 .fmeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .fname { font-size: 16px; font-weight: 700; letter-spacing: -.012em; }
@@ -366,7 +392,7 @@ a { color: var(--accent); }
 .fcount { font-size: 13.5px; font-weight: 700; color: var(--text-3); flex-shrink: 0; }
 
 /* ── Налаштування ─────────────────────────────────────────────────────── */
-.grp { border-radius: 24px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 16px; animation: cardIn .4s var(--ease) both; }
+.grp { border-radius: 24px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 16px; }
 .grp-t { font-size: 12.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
 .set { display: flex; flex-direction: column; gap: 9px; }
 .set-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -733,9 +759,7 @@ function toast(msg) {
 
 function buildShell() {
   app.innerHTML =
-    '<div class="head" id="head"><div class="head-txt" style="flex:1;min-width:0">' +
-      '<div class="eyebrow" id="eyebrow"></div><h1 class="h1" id="h1"></h1>' +
-    "</div></div>" +
+    '<div class="head" id="head"><div class="head-txt" id="head-txt"></div></div>' +
     '<div class="pager" id="pager" style="--p:0">' +
       '<section class="pane" id="pane-notes"></section>' +
       '<section class="pane" id="pane-folders"></section>' +
@@ -764,16 +788,28 @@ const HEADS = {
 };
 
 function setHead(pane) {
-  const head = $("#head");
+  const host = $("#head-txt");
   const parts = HEADS[pane]();
-  if ($("#h1").textContent === parts[1] && $("#eyebrow").textContent === parts[0]) return;
-  // Шапка не зрушується — міняється лише текст усередині неї.
-  head.classList.add("fading");
-  setTimeout(() => {
-    $("#eyebrow").textContent = parts[0];
-    $("#h1").textContent = parts[1];
-    head.classList.remove("fading");
-  }, cfg.motion ? 170 : 0);
+  const cur = host.querySelector(".ht:not(.out)");
+  if (cur && cur.dataset.k === pane && cur.dataset.eye === parts[0]) return;
+
+  const next = document.createElement("div");
+  next.className = "ht";
+  next.dataset.k = pane;
+  next.dataset.eye = parts[0];
+  next.innerHTML = '<div class="eyebrow">' + esc(parts[0]) + '</div><h1 class="h1">' + esc(parts[1]) + "</h1>";
+
+  if (!cur || !cfg.motion) {
+    host.innerHTML = "";
+    host.appendChild(next);
+    return;
+  }
+  // Старий рядок іде вгору рівно тоді, коли новий приходить знизу.
+  next.classList.add("in");
+  host.appendChild(next);
+  cur.classList.add("out");
+  cur.addEventListener("animationend", () => cur.remove(), { once: true });
+  setTimeout(() => cur.remove(), 600);
 }
 
 /** Єдине місце, де рухається сторінка, кружок і текст шапки. */
@@ -883,7 +919,7 @@ function wireDock() {
   });
 
   const q = $("#q");
-  q.addEventListener("input", () => { ui.query = q.value; renderNotes(); });
+  q.addEventListener("input", () => { ui.query = q.value; renderNotes({ animate: false }); });
   q.addEventListener("keydown", (e) => { if (e.key === "Escape") setSearching(false); });
   q.addEventListener("blur", () => {
     if (ui.query.trim()) return;
@@ -907,6 +943,7 @@ function wireDock() {
 
 function setSearching(on) {
   ui.searching = on;
+  app.dataset.search = on ? "on" : "off";
   $("#dock").dataset.mode = on ? "search" : "nav";
   const q = $("#q");
   if (on) {
@@ -921,11 +958,11 @@ function setSearching(on) {
 
 /* ── Сторінка: нотатки ────────────────────────────────────────────────── */
 
-function noteCard(n, i) {
+function noteCard(n) {
   const f = folderById(n.folderID);
   const a = accentOf(n);
-  return '<button class="card g' + (n.pinned ? " pin" : "") + '" data-open="' + n.id +
-    '" style="--row-accent:' + a + ";animation-delay:" + Math.min(i * 38, 240) + 'ms">' +
+  return '<button class="card g g-flat' + (n.pinned ? " pin" : "") + '" data-open="' + n.id +
+    '" style="--row-accent:' + a + '">' +
     '<span class="card-top">' +
       (n.pinned ? '<span style="color:' + a + ';display:flex">' + ICONS.pinTiny + "</span>" : "") +
       '<span class="card-title">' + esc(displayTitle(n)) + "</span>" +
@@ -936,7 +973,11 @@ function noteCard(n, i) {
   "</button>";
 }
 
-function renderNotes() {
+/** `fresh` — це інший набір нотаток (інша тека, інший екран), а не та сама
+ *  вибірка після правки. Тільки він заслуговує на анімацію входу. */
+let lastNotesKey = null;
+
+function renderNotes(opts) {
   const host = $("#pane-notes");
   const notes = db.notes
     .filter((n) => !ui.folderID || n.folderID === ui.folderID)
@@ -944,9 +985,9 @@ function renderNotes() {
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated - a.updated);
 
   const chips = [{ id: null, name: "Усі" }].concat(db.folders)
-    .map((f) => '<button class="chip g' + (ui.folderID === f.id ? " on" : "") +
+    .map((f) => '<button class="chip g g-flat' + (ui.folderID === f.id ? " on" : "") +
       '" data-folder="' + (f.id || "") + '">' + esc(f.name) + "</button>").join("") +
-    '<button class="chip g chip-add" id="chip-add" aria-label="Нова тека">' + ICONS.plusTiny + "<span>Тека</span></button>";
+    '<button class="chip g g-flat chip-add" id="chip-add" aria-label="Нова тека">' + ICONS.plusTiny + "<span>Тека</span></button>";
 
   const body = notes.length
     ? '<div class="pad">' + notes.map(noteCard).join("") + "</div>"
@@ -957,7 +998,12 @@ function renderNotes() {
                           : "Тапни «+», щоб написати першу нотатку.") + "</p>" +
       "</div>";
 
-  host.innerHTML = '<div class="chips">' + chips + "</div>" + body;
+  const key = ui.folderID + "|" + (ui.query ? "q" : "") + "|" + notes.length;
+  const fresh = (!opts || opts.animate !== false) && key !== lastNotesKey && cfg.motion;
+  lastNotesKey = key;
+
+  host.innerHTML = '<div class="chips">' + chips + "</div>" +
+    (fresh ? body.replace('class="pad"', 'class="pad fresh"') : body);
 
   const ph = "Пошук у " + db.notes.length + " " + declension(db.notes.length);
   if ($("#q").placeholder !== ph) $("#q").placeholder = ph;
@@ -976,11 +1022,10 @@ function renderNotes() {
 
 function renderFolders() {
   const host = $("#pane-folders");
-  const rows = db.folders.map((f, i) => {
+  const rows = db.folders.map((f) => {
     const mine = db.notes.filter((n) => n.folderID === f.id);
     const last = mine.slice().sort((a, b) => b.updated - a.updated)[0];
-    return '<button class="frow g" data-pick="' + f.id + '" style="--row-accent:' + ACCENT_HEX[f.accent] +
-      ";animation-delay:" + Math.min(i * 42, 240) + 'ms">' +
+    return '<button class="frow g g-flat" data-pick="' + f.id + '" style="--row-accent:' + ACCENT_HEX[f.accent] + '">' +
       '<span class="fic">' + ICONS.folder + "</span>" +
       '<span class="fmeta"><span class="fname">' + esc(f.name) + "</span>" +
       '<span class="flast">' + esc(last ? displayTitle(last) : "Порожня тека") + "</span></span>" +
@@ -1010,7 +1055,7 @@ function renderSettings() {
 
   host.innerHTML = '<div class="pad">' +
 
-    '<div class="grp g">' +
+    '<div class="grp g g-flat">' +
       '<div class="grp-t">Вигляд</div>' +
       '<div class="set"><div class="set-top"><span class="set-l">Тема</span></div>' +
         '<div class="seg">' + themes.map((t) =>
@@ -1024,7 +1069,7 @@ function renderSettings() {
       '<p class="set-h">Колір кнопок і галочок. Теки лишаються при своїх кольорах.</p></div>' +
     "</div>" +
 
-    '<div class="grp g" style="animation-delay:60ms">' +
+    '<div class="grp g g-flat">' +
       '<div class="grp-t">Тло</div>' +
       '<div class="set"><div class="set-top"><span class="set-l">Швидкість</span>' +
         '<span class="set-v" id="v-speed">' + SPEEDS[cfg.bgSpeed] + "</span></div>" +
@@ -1039,7 +1084,7 @@ function renderSettings() {
         '<p class="set-h">Сід задає кольори й розташування плям. Те саме число завжди дає те саме тло — запамʼятай, якщо сподобалось.</p></div>' +
     "</div>" +
 
-    '<div class="grp g" style="animation-delay:120ms">' +
+    '<div class="grp g g-flat">' +
       '<div class="grp-t">Скло й рух</div>' +
       '<div class="set"><div class="set-top"><span class="set-l">Розмиття</span>' +
         '<span class="set-v" id="v-blur">' + cfg.blur + " px</span></div>" +
@@ -1049,7 +1094,7 @@ function renderSettings() {
         '<p class="set-h">Вимикає переходи, каскади й рух тла.</p></div>' +
     "</div>" +
 
-    '<div class="grp g" style="animation-delay:180ms">' +
+    '<div class="grp g g-flat">' +
       '<div class="grp-t">Дані</div>' +
       '<p class="set-h" style="margin:0">' + db.notes.length + " " + declensionNom(db.notes.length) +
         " у цьому браузері. Нічого нікуди не надсилається.</p>" +
@@ -1216,9 +1261,8 @@ function closeEditor() {
 function renderTodos(ed, n) {
   const host = ed.querySelector("#todos");
   if (!host) return;
-  host.innerHTML = n.items.map((it, i) =>
-    '<div class="todo' + (it.done ? " done" : "") + '" data-item="' + it.id +
-      '" style="animation-delay:' + Math.min(i * 34, 200) + 'ms">' +
+  host.innerHTML = n.items.map((it) =>
+    '<div class="todo' + (it.done ? " done" : "") + '" data-item="' + it.id + '">' +
       '<button class="box" data-toggle="' + it.id + '" aria-label="Готово">' + ICONS.check + "</button>" +
       '<input type="text" value="' + esc(it.text) + '" placeholder="Пункт">' +
       '<button class="todo-x" data-rm="' + it.id + '" aria-label="Прибрати">' + ICONS.minus + "</button>" +
