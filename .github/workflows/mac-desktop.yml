@@ -77,6 +77,9 @@ jobs:
           open -a Simulator --args -CurrentDeviceUDID "$UDID"
           sleep 10
           xcrun simctl launch "$UDID" "$BUNDLE_ID" -uiPane "${{ inputs.pane }}" || true
+          sleep 3
+          # Вивести вікно наперед, інакше на столі буде порожньо.
+          osascript -e 'tell application "Simulator" to activate' || true
 
       - name: Turn on screen sharing
         env:
@@ -91,12 +94,47 @@ jobs:
           PW=$(printf '%.8s' "$VNC_PASSWORD")
 
           # macOS оголошує власну схему автентифікації поруч зі старою VNC, і
-          # клієнт обирає саме її — а вона питає обліковий запис системи, якому
-          # тут пароля ніхто не ставив. Тому ставимо його явно: інакше вікно
-          # входу питає те, чого не існує.
-          sudo dscl . -passwd /Users/runner "$PW" 2>/dev/null \
-            && echo "пароль облікового запису runner виставлено" \
-            || echo "::warning::не вдалося виставити пароль облікового запису"
+          # клієнт обирає саме її — а вона питає обліковий запис системи.
+          # Тобто вирішує не VNC-пароль, а пароль акаунта. Ставимо його трьома
+          # способами підряд: який спрацює, той і спрацює.
+          AUTH_OK=""
+
+          if sudo dscl . -passwd /Users/runner "$PW" 2>/dev/null; then
+            echo "спосіб 1 (dscl) відпрацював"
+          else
+            echo "спосіб 1 (dscl) не вдався"
+          fi
+
+          if ! dscl . -authonly runner "$PW" 2>/dev/null; then
+            echo "перевірка після способу 1 не пройшла, пробую sysadminctl"
+            sudo sysadminctl -resetPasswordFor runner -newPassword "$PW" 2>/dev/null || true
+          fi
+
+          if dscl . -authonly runner "$PW" 2>/dev/null; then
+            AUTH_OK="runner"
+            echo "вхід під runner підтверджено"
+          else
+            # Останній рубіж: власний обліковий запис, який точно наш.
+            echo "створюю окремий обліковий запис vnc"
+            sudo dscl . -create /Users/vnc 2>/dev/null || true
+            sudo dscl . -create /Users/vnc UserShell /bin/bash
+            sudo dscl . -create /Users/vnc RealName "VNC"
+            sudo dscl . -create /Users/vnc UniqueID 520
+            sudo dscl . -create /Users/vnc PrimaryGroupID 20
+            sudo dscl . -create /Users/vnc NFSHomeDirectory /Users/vnc
+            sudo dscl . -passwd /Users/vnc "$PW"
+            sudo dseditgroup -o edit -a vnc -t user admin
+            if dscl . -authonly vnc "$PW" 2>/dev/null; then
+              AUTH_OK="vnc"
+              echo "вхід під vnc підтверджено"
+            fi
+          fi
+
+          if [ -z "$AUTH_OK" ]; then
+            echo "::error::жоден спосіб не дав робочого входу"
+            exit 1
+          fi
+          echo "VNC_USER=$AUTH_OK" >> "$GITHUB_ENV"
 
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
             -activate -configure -access -on \
@@ -157,7 +195,7 @@ jobs:
             echo ""
             echo "### [$URL/vnc.html?autoconnect=true&resize=scale]($URL/vnc.html?autoconnect=true&resize=scale)"
             echo ""
-            echo "Користувач: **runner**, пароль — секрет \`VNC_PASSWORD\`."
+            echo "Користувач: **$VNC_USER**, пароль — секрет \`VNC_PASSWORD\`."
             echo ""
             echo "Сеанс живе ${{ inputs.minutes }} хв. Щоб обірвати раніше — зупини цю збірку."
           } >> "$GITHUB_STEP_SUMMARY"
@@ -170,7 +208,8 @@ jobs:
           mkdir -p "$RUNNER_TEMP/link"
           {
             echo "$URL/vnc.html?autoconnect=true&resize=scale"
-            echo "користувач: runner"
+            echo "користувач: $VNC_USER"
+            echo "(вхід перевірено на самому раннері перед публікацією)"
           } > "$RUNNER_TEMP/link/desktop-url.txt"
 
       - name: Publish the address
