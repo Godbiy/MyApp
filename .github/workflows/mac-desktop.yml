@@ -188,33 +188,7 @@ jobs:
           # доходить до кінця. Поруч сервер пропонує звичайний парольний вхід
           # (тип 2), який працює безвідмовно й не питає імені користувача.
           # Тож просимо клієнта надавати перевагу саме йому.
-          python3 - "$NOVNC_DIR/core/rfb.js" <<'PATCH'
-import sys, io
-p = sys.argv[1]
-s = io.open(p, encoding="utf-8").read()
-old = '''            this._rfbAuthScheme = -1;
-            for (let type of types) {
-                if (this._isSupportedSecurityType(type)) {
-                    this._rfbAuthScheme = type;
-                    break;
-                }
-            }'''
-new = '''            this._rfbAuthScheme = -1;
-            if (Array.prototype.includes.call(types, securityTypeVNCAuth)) {
-                this._rfbAuthScheme = securityTypeVNCAuth;
-            } else {
-                for (let type of types) {
-                    if (this._isSupportedSecurityType(type)) {
-                        this._rfbAuthScheme = type;
-                        break;
-                    }
-                }
-            }'''
-if old not in s:
-    sys.exit("не знайшов місце вибору схеми — клієнт змінився")
-io.open(p, "w", encoding="utf-8", newline="\n").write(s.replace(old, new, 1))
-print("клієнт налаштовано на парольний вхід")
-PATCH
+          python3 .github/scripts/prefer-vnc-auth.py "$NOVNC_DIR/core/rfb.js"
 
           # Власне середовище: системний python3 на раннері захищений від
           # встановлення пакетів напряму.
