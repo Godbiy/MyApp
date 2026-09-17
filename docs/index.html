@@ -347,10 +347,23 @@ a { color: var(--accent); }
 @keyframes edOut { to   { transform: translateX(100%); } }
 /* Під редактором тло густішає, щоб список не просвічував крізь скло. */
 .editor::before { content: ""; position: absolute; inset: 0; background: var(--paper); opacity: .55; }
-.editor > * { position: relative; }
+/* z-index, а не position: relative. Воно піднімало вміст над цією заливкою,
+   але заразом перебивало position:absolute у панелі — та переставала
+   слухати right:20px, розтягувалась на всю ширину й виносила «Готово» за
+   край екрана. Елементи флекс-контейнера слухають z-index і без position. */
+.editor > * { z-index: 1; }
 
 .nav { display: flex; align-items: center; gap: 8px; padding: 12px 20px 0; flex-shrink: 0; }
-.back { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 10px; border-radius: 22px; font-size: 15px; font-weight: 700; transition: transform .14s var(--ease); }
+.back {
+  display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 10px;
+  border-radius: 22px; font-size: 15px; font-weight: 700;
+  /* Довга назва теки інакше роздуває кнопку на пів екрана, а текст
+     переноситься у два рядки всередині 44-піксельної пігулки. */
+  max-width: 52%; min-width: 0;
+  transition: transform .14s var(--ease);
+}
+.back svg { flex-shrink: 0; }
+.back span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .back:active { transform: scale(.94); }
 .ed-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none; }
 .ed-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
@@ -459,8 +472,11 @@ input[type=range]::-moz-range-thumb {
   margin: 0 12px calc(12px + env(safe-area-inset-bottom));
   border-radius: 28px; padding: 22px 20px 20px;
   display: flex; flex-direction: column; gap: 12px;
+  max-height: calc(100% - 24px); overflow-y: auto;
   animation: sheetIn .34s cubic-bezier(.22,1.1,.3,1) both;
 }
+#sheet-card::-webkit-scrollbar { display: none; width: 0; height: 0; }
+#sheet h3 { overflow-wrap: anywhere; }
 @keyframes sheetIn { from { transform: translateY(40px); opacity: 0; } }
 #sheet.closing #sheet-card { animation: sheetOut .2s var(--ease) both; }
 #sheet.closing #sheet-scrim { animation: fade .2s var(--ease) reverse both; }
@@ -470,6 +486,10 @@ input[type=range]::-moz-range-thumb {
 #sheet input[type=text] { height: 48px; border-radius: 16px; padding: 0 14px; width: 100%; border: 1px solid var(--stroke-reg); background: var(--field); outline: none; font-size: 16px; }
 .sheet-acts { display: flex; gap: 10px; margin-top: 4px; }
 .sheet-acts button { flex: 1; height: 48px; border-radius: 18px; font-size: 15.5px; font-weight: 700; transition: transform .14s var(--ease); }
+/* У колонці головна вісь — вертикаль, тож flex:1 з базою 0 з'їдав height:48px
+   і кнопки сплющувались до висоти тексту. Тут розмір задає саме height. */
+.sheet-acts.col { flex-direction: column; }
+.sheet-acts.col button { flex: 0 0 auto; width: 100%; }
 .sheet-acts button:active { transform: scale(.96); }
 
 #toast {
@@ -1343,7 +1363,7 @@ function noteActions(id) {
   const n = noteById(id);
   if (!n) return;
   sheet("<h3>" + esc(displayTitle(n)) + "</h3>" +
-    '<div class="sheet-acts" style="flex-direction:column">' +
+    '<div class="sheet-acts col">' +
       '<button class="btn-ghost" id="a-pin">' + (n.pinned ? "Відкріпити" : "Закріпити") + "</button>" +
       '<button class="btn-danger" id="a-del">Видалити</button>' +
       '<button class="btn-ghost" id="a-cancel">Скасувати</button></div>',
