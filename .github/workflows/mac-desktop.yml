@@ -99,18 +99,34 @@ jobs:
       - name: Publish the screen to a browser
         run: |
           set -euo pipefail
-          brew install --quiet novnc websockify cloudflared
 
-          # Шлях до веб-клієнта різниться між версіями формули — шукаємо vnc.html.
-          NOVNC=$(find "$(brew --prefix)" -name "vnc.html" -path "*novnc*" 2>/dev/null | head -1)
-          NOVNC_DIR=$(dirname "$NOVNC")
-          echo "веб-клієнт: $NOVNC_DIR"
+          # Ні noVNC, ні cloudflared не варто брати з Homebrew: формули novnc
+          # там немає взагалі, а решта залежить від стану крана. Обидва — це
+          # просто файли, тож беремо їх напряму й не залежимо ні від чого.
+          NOVNC_DIR="$RUNNER_TEMP/novnc"
+          mkdir -p "$NOVNC_DIR"
+          curl -sL https://github.com/novnc/noVNC/archive/refs/tags/v1.5.0.tar.gz \
+            | tar xz -C "$NOVNC_DIR" --strip-components=1
+          test -f "$NOVNC_DIR/vnc.html" || { echo "::error::веб-клієнт не розпакувався"; exit 1; }
 
-          websockify --web "$NOVNC_DIR" 6080 localhost:5900 \
+          # Власне середовище: системний python3 на раннері захищений від
+          # встановлення пакетів напряму.
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet --upgrade pip websockify
+
+          curl -sL -o "$RUNNER_TEMP/cf.tgz" \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
+          tar xz -C "$RUNNER_TEMP" -f "$RUNNER_TEMP/cf.tgz"
+          chmod +x "$RUNNER_TEMP/cloudflared"
+
+          "$RUNNER_TEMP/venv/bin/websockify" --web "$NOVNC_DIR" 6080 localhost:5900 \
             > "$RUNNER_TEMP/websockify.log" 2>&1 &
-          sleep 4
+          sleep 5
+          curl -sf -o /dev/null "http://localhost:6080/vnc.html" \
+            && echo "веб-клієнт віддається на 6080" \
+            || { echo "::error::websockify не піднявся"; cat "$RUNNER_TEMP/websockify.log"; exit 1; }
 
-          cloudflared tunnel --url http://localhost:6080 --no-autoupdate \
+          "$RUNNER_TEMP/cloudflared" tunnel --url http://localhost:6080 --no-autoupdate \
             > "$RUNNER_TEMP/tunnel.log" 2>&1 &
 
           # Тунель друкує адресу не одразу — чекаємо, поки з'явиться.
