@@ -156,6 +156,56 @@ jobs:
           xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
           xcrun simctl shutdown "$UDID" || true
 
+      # Знімок не показує руху, а весь застосунок — про рух. Тому окремо
+      # ганяємо сценарій користування й пишемо екран.
+      - name: Record a walkthrough
+        id: video
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices | grep -m1 "(Booted)" \
+                 | grep -oE '[0-9A-Fa-f-]{36}' || true)
+          if [ -z "$UDID" ]; then
+            UDID=$(xcrun simctl list devices available \
+                   | grep -oE 'iPhone[^(]*\(([0-9A-Fa-f-]{36})\)' \
+                   | head -1 | grep -oE '[0-9A-Fa-f-]{36}')
+            xcrun simctl boot "$UDID"
+            xcrun simctl bootstatus "$UDID" -b
+          fi
+          xcrun simctl status_bar "$UDID" override --time "9:41" \
+            --cellularBars 4 --wifiBars 3 --batteryState charged --batteryLevel 100
+
+          mkdir -p "$RUNNER_TEMP/video"
+          xcrun simctl io "$UDID" recordVideo --codec h264 \
+            "$RUNNER_TEMP/video/$APP_NAME-walkthrough.mp4" &
+          REC=$!
+          sleep 2
+
+          set +e
+          xcodebuild test \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            -quiet \
+            CODE_SIGNING_ALLOWED=NO
+          STATUS=$?
+          set -e
+
+          sleep 2
+          kill -INT $REC || true
+          wait $REC 2>/dev/null || true
+          ls -lh "$RUNNER_TEMP/video/" || true
+          echo "тест завершився зі станом $STATUS (для відео це не критично)"
+
+      - name: Upload walkthrough video
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.APP_NAME }}-walkthrough-video
+          path: ${{ runner.temp }}/video/*.mp4
+          if-no-files-found: warn
+
       - name: Upload screenshots
         if: always() && steps.shots.outcome != 'skipped'
         uses: actions/upload-artifact@v5

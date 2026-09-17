@@ -30,3 +30,33 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         ENABLE_PREVIEWS: YES
         GENERATE_INFOPLIST_FILE: NO
+
+  # Ціль існує тільки заради відео: XCUITest — єдине, що вміє тапати по
+  # симулятору, а отже єдиний спосіб побачити застосунок у русі без пристрою.
+  SkloUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Sources/SkloUITests
+    dependencies:
+      - target: Sklo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.godbiy.sklo.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Sklo
+
+schemes:
+  Sklo:
+    build:
+      targets:
+        Sklo: all
+        SkloUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SkloUITests
+    archive:
+      config: Release
