@@ -20,9 +20,9 @@
   --text-2: rgba(20,18,28,0.62);
   --text-3: rgba(20,18,28,0.45);
 
-  --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(255,255,255,0.46));
-  --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(255,255,255,0.52));
-  --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.86), rgba(255,255,255,0.55));
+  --glass-thin: linear-gradient(145deg, rgba(255,255,255,calc(0.78 * var(--k))), rgba(255,255,255,calc(0.46 * var(--k))));
+  --glass-reg: linear-gradient(145deg, rgba(255,255,255,calc(0.85 * var(--k))), rgba(255,255,255,calc(0.52 * var(--k))));
+  --glass-thick: linear-gradient(150deg, rgba(255,255,255,calc(0.86 * var(--k))), rgba(255,255,255,calc(0.55 * var(--k))));
   --stroke-thin: rgba(255,255,255,0.88);
   --stroke-reg: rgba(255,255,255,0.92);
   --hi: rgba(255,255,255,1);
@@ -38,6 +38,7 @@
 
   --accent: #7C5CFF;
   --blur: 24px;
+  --k: 1;          /* щільність скла: множник заливки всіх поверхонь */
 
   /* Керується з налаштувань */
   --bg-op: 1;
@@ -55,9 +56,9 @@
     --text: #ffffff;
     --text-2: rgba(255,255,255,0.64);
     --text-3: rgba(255,255,255,0.46);
-    --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05));
-    --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06));
-    --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055));
+    --glass-thin: linear-gradient(145deg, rgba(255,255,255,calc(0.155 * var(--k))), rgba(255,255,255,calc(0.05 * var(--k))));
+    --glass-reg: linear-gradient(145deg, rgba(255,255,255,calc(0.19 * var(--k))), rgba(255,255,255,calc(0.06 * var(--k))));
+    --glass-thick: linear-gradient(150deg, rgba(255,255,255,calc(0.19 * var(--k))), rgba(255,255,255,calc(0.055 * var(--k))));
     --stroke-thin: rgba(255,255,255,0.16);
     --stroke-reg: rgba(255,255,255,0.20);
     --hi: rgba(255,255,255,0.45);
@@ -78,9 +79,9 @@
   --text: #ffffff;
   --text-2: rgba(255,255,255,0.64);
   --text-3: rgba(255,255,255,0.46);
-  --glass-thin: linear-gradient(145deg, rgba(255,255,255,0.155), rgba(255,255,255,0.05));
-  --glass-reg: linear-gradient(145deg, rgba(255,255,255,0.19), rgba(255,255,255,0.06));
-  --glass-thick: linear-gradient(150deg, rgba(255,255,255,0.19), rgba(255,255,255,0.055));
+  --glass-thin: linear-gradient(145deg, rgba(255,255,255,calc(0.155 * var(--k))), rgba(255,255,255,calc(0.05 * var(--k))));
+  --glass-reg: linear-gradient(145deg, rgba(255,255,255,calc(0.19 * var(--k))), rgba(255,255,255,calc(0.06 * var(--k))));
+  --glass-thick: linear-gradient(150deg, rgba(255,255,255,calc(0.19 * var(--k))), rgba(255,255,255,calc(0.055 * var(--k))));
   --stroke-thin: rgba(255,255,255,0.16);
   --stroke-reg: rgba(255,255,255,0.20);
   --hi: rgba(255,255,255,0.45);
@@ -234,7 +235,7 @@ a { color: var(--accent); }
 .chips {
   /* Відступ дає margin, а не padding: тоді край прокрутки збігається з краєм
      карток, і чіпи ховаються рівно під ним, а не біжать до краю екрана. */
-  display: flex; gap: 8px; margin: 0 20px; padding: 14px 0 2px; overflow-x: auto;
+  display: flex; gap: 8px; margin: 0 20px; padding: 14px 0 8px; overflow-x: auto;
   flex-shrink: 0; touch-action: pan-x;
   scrollbar-width: none; -ms-overflow-style: none;
 }
@@ -242,6 +243,10 @@ a { color: var(--accent); }
    розмір надійніший. */
 .chips::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .chip {
+  /* Без власної важкої тіні: чіп лежить просто на тлі, а великій тіні ніде
+     поміститись — контейнер прокрутки зрізав її за 2px і лишав сірий мазок
+     із рівним краєм під усією стрічкою. */
+  box-shadow: inset 0 1px 0 var(--hi);
   display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 17px; border-radius: 19px;
   font-size: 14px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; color: var(--text-2);
   transition: background .22s var(--ease), color .22s var(--ease), border-color .22s var(--ease), transform .14s var(--ease);
@@ -543,15 +548,27 @@ let cfg = {
   bgSpeed: 2,      // 0 — тло завмирає
   bgSeed: 7,
   bgOpacity: 1,
-  blur: 24,
+  glass: 100,      // щільність скла, %
   motion: true,
 };
 
 function loadCfg() {
+  let stored = null;
   try {
     const raw = localStorage.getItem(SKEY);
-    if (raw) Object.assign(cfg, JSON.parse(raw) || {});
+    if (raw) stored = JSON.parse(raw);
   } catch (e) {}
+  if (stored && typeof stored === "object") {
+    // Раніше тут жило саме розмиття. Дивимось на збережене, а не на cfg:
+    // у cfg вже лежить типова щільність, тож перевірка по ньому не спрацює
+    // ніколи.
+    if (typeof stored.blur === "number" && typeof stored.glass !== "number") {
+      stored.glass = Math.round((stored.blur / 24) * 100);
+    }
+    delete stored.blur;
+    Object.assign(cfg, stored);
+  }
+  cfg.glass = Math.min(160, Math.max(20, cfg.glass || 100));
 }
 function saveCfg() {
   try { localStorage.setItem(SKEY, JSON.stringify(cfg)); } catch (e) {}
@@ -761,9 +778,13 @@ function applyBgSpeed() {
 
 function applyCfg() {
   const root = document.documentElement;
+  const k = cfg.glass / 100;
   root.style.setProperty("--accent", cfg.accent);
   root.style.setProperty("--bg-op", cfg.bgOpacity);
-  root.style.setProperty("--blur", cfg.blur + "px");
+  // Один повзунок веде і заливку поверхонь, і розмиття тих небагатьох
+  // елементів, під якими справді проїжджає контент.
+  root.style.setProperty("--k", k.toFixed(3));
+  root.style.setProperty("--blur", Math.round(6 + 22 * k) + "px");
   root.setAttribute("data-motion", cfg.motion ? "on" : "off");
   if (cfg.theme === "auto") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", cfg.theme);
@@ -1120,9 +1141,10 @@ function renderSettings() {
 
     '<div class="grp g g-flat">' +
       '<div class="grp-t">Скло й рух</div>' +
-      '<div class="set"><div class="set-top"><span class="set-l">Розмиття</span>' +
-        '<span class="set-v" id="v-blur">' + cfg.blur + " px</span></div>" +
-        '<input type="range" id="r-blur" min="0" max="44" step="2" value="' + cfg.blur + '"></div>' +
+      '<div class="set"><div class="set-top"><span class="set-l">Щільність скла</span>' +
+        '<span class="set-v" id="v-glass">' + cfg.glass + "%</span></div>" +
+        '<input type="range" id="r-glass" min="20" max="160" step="5" value="' + cfg.glass + '">' +
+        '<p class="set-h">Наліво — панелі майже прозорі й тло проступає наскрізь. Направо — матове скло.</p></div>' +
       '<div class="set"><div class="set-top" style="align-items:center"><span class="set-l">Анімації</span>' +
         '<button class="sw' + (cfg.motion ? " on" : "") + '" id="t-motion" role="switch" aria-label="Анімації"></button></div>' +
         '<p class="set-h">Вимикає переходи, каскади й рух тла.</p></div>' +
@@ -1163,10 +1185,10 @@ function renderSettings() {
     host.querySelector("#v-op").textContent = ro.value + "%";
     applyCfg(); saveCfg();
   };
-  const rb = host.querySelector("#r-blur");
-  rb.oninput = () => {
-    cfg.blur = +rb.value;
-    host.querySelector("#v-blur").textContent = cfg.blur + " px";
+  const rg = host.querySelector("#r-glass");
+  rg.oninput = () => {
+    cfg.glass = +rg.value;
+    host.querySelector("#v-glass").textContent = cfg.glass + "%";
     applyCfg(); saveCfg();
   };
   host.querySelector("#b-seed").onclick = shuffleBg;
