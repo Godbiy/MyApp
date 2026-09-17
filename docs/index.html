@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#07070d">
 <meta name="description" content="Записник у стилі Liquid Glass. Працює офлайн, дані лишаються на пристрої.">
 <meta name="mobile-web-app-capable" content="yes">
@@ -98,6 +98,9 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; margin: 0; overscroll-behavior: none; }
 body {
+  /* Прибита до екрана: коли вилазить клавіатура, браузер не має куди
+     прокрутити сторінку, тож шапка не може поїхати за край. */
+  position: fixed; inset: 0;
   background: var(--paper); color: var(--text); font-family: var(--ui);
   -webkit-font-smoothing: antialiased; overflow: hidden;
 }
@@ -182,7 +185,9 @@ a { color: var(--accent); }
    Шапка й панель стоять намертво. Рухається лише сторінка між ними. */
 #app {
   position: relative; z-index: 2;
-  height: 100%; width: 100%; max-width: 560px; margin: 0 auto;
+  /* Висота живого вікна: із клавіатурою вона менша, і панель сідає просто
+     над нею замість того, щоб ховатись під нею. */
+  height: var(--vh, 100%); width: 100%; max-width: 560px; margin: 0 auto;
   display: flex; flex-direction: column;
   padding-top: env(safe-area-inset-top);
   overflow: hidden;
@@ -220,17 +225,22 @@ a { color: var(--accent); }
 .pane {
   flex: 0 0 100%; width: 100%; min-width: 0;
   display: flex; flex-direction: column;
-  overflow-y: auto; overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
 }
-.pane::-webkit-scrollbar { display: none; }
+.pane::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .pad { padding: 16px 20px calc(150px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 11px; }
 
 .chips {
-  display: flex; gap: 8px; padding: 14px 20px 2px; overflow-x: auto;
-  flex-shrink: 0; scrollbar-width: none; touch-action: pan-x;
+  /* Відступ дає margin, а не padding: тоді край прокрутки збігається з краєм
+     карток, і чіпи ховаються рівно під ним, а не біжать до краю екрана. */
+  display: flex; gap: 8px; margin: 0 20px; padding: 14px 0 2px; overflow-x: auto;
+  flex-shrink: 0; touch-action: pan-x;
+  scrollbar-width: none; -ms-overflow-style: none;
 }
-.chips::-webkit-scrollbar { display: none; }
+/* display:none не всюди прибирає накладну смугу на Android — нульовий
+   розмір надійніший. */
+.chips::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .chip {
   display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 17px; border-radius: 19px;
   font-size: 14px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; color: var(--text-2);
@@ -342,8 +352,8 @@ a { color: var(--accent); }
 .nav { display: flex; align-items: center; gap: 8px; padding: 12px 20px 0; flex-shrink: 0; }
 .back { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px 0 10px; border-radius: 22px; font-size: 15px; font-weight: 700; transition: transform .14s var(--ease); }
 .back:active { transform: scale(.94); }
-.ed-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
-.ed-scroll::-webkit-scrollbar { display: none; }
+.ed-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+.ed-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .paper { margin: 20px 20px calc(150px + env(safe-area-inset-bottom)); padding: 24px 22px 26px; border-radius: 30px; }
 .stamp { font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
 .paper textarea { display: block; width: 100%; border: 0; background: none; outline: none; resize: none; overflow: hidden; padding: 0; margin: 0; }
@@ -1458,6 +1468,26 @@ window.addEventListener("popstate", () => {
   if (ui.searching) { setSearching(false); push(); return; }
   if (ui.pane !== 0) { setPane(0); push(); }
 });
+
+/* ── Живе вікно ──────────────────────────────────────────────────────────
+   Клавіатура зменшує видиму частину екрана, але не layout. Якщо цього не
+   врахувати, браузер прокручує сторінку, щоб показати поле вводу, — і шапка
+   їде за край. Тримаємо застосунок рівно у видимій висоті. */
+function syncViewport() {
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--vh", Math.round(h) + "px");
+  // Body прибитий, але деякі оболонки все одно смикають прокрутку.
+  if (window.scrollY !== 0) window.scrollTo(0, 0);
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", syncViewport);
+  window.visualViewport.addEventListener("scroll", syncViewport);
+}
+window.addEventListener("resize", syncViewport);
+window.addEventListener("orientationchange", () => setTimeout(syncViewport, 120));
+syncViewport();
 
 loadCfg();
 applyCfg();
