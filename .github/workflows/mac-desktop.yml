@@ -190,6 +190,7 @@ jobs:
           # там немає взагалі, а решта залежить від стану крана. Обидва — це
           # просто файли, тож беремо їх напряму й не залежимо ні від чого.
           NOVNC_DIR="$RUNNER_TEMP/novnc"
+          echo "NOVNC_DIR=$NOVNC_DIR" >> "$GITHUB_ENV"
           mkdir -p "$NOVNC_DIR"
           curl -sL https://github.com/novnc/noVNC/archive/refs/tags/v1.5.0.tar.gz \
             | tar xz -C "$NOVNC_DIR" --strip-components=1
@@ -279,7 +280,16 @@ jobs:
           echo "тримаю сеанс $MIN хв"
           echo "адреса: $FULL"
           for i in $(seq 1 "$MIN"); do
-            sleep 60
+            for _ in 1 2; do
+              sleep 30
+              # Імітує дію користувача: не лише не дає заснути, а й будить
+              # уже приспаний дисплей — саме на цьому глядач бачив чорне.
+              caffeinate -u -t 1 >/dev/null 2>&1 || true
+              # Свіжий знімок столу лягає туди ж, звідки віддається сторінка.
+              # Тепер стан екрана видно звичайним запитом, а не підключенням,
+              # яке займало б єдине місце глядача.
+              screencapture -x "$NOVNC_DIR/live.png" >/dev/null 2>&1 || true
+            done
             echo "[$i/$MIN хв] живий — $URL/vnc.html"
           done
           echo "час вийшов, вимикаюсь"
